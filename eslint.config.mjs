@@ -4,11 +4,6 @@ import { defineConfig } from 'eslint/config';
 
 export default defineConfig([
     {
-        env: {
-            browser: true,
-            node: true,
-            es2021: true,
-        },
         rules: {
             indent: ['error', 4],
             quotes: ['error', 'single'],
@@ -18,6 +13,6 @@ export default defineConfig([
         files: ['**/*.{js,mjs,cjs}'],
         plugins: { js },
         extends: ['js/recommended'],
-        languageOptions: { globals: globals.browser },
+        languageOptions: { globals: { ...globals.node, ...globals.browser } },
     },
 ]);
