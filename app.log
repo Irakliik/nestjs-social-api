@@ -1,0 +1,4 @@
+2025-09-25 20:38:05 - info - Incoming request: GET /health
+2025-09-25 20:38:05 - info - Incoming request: GET /.well-known/appspecific/com.chrome.devtools.json
+2025-09-25 20:38:34 - info - Incoming request: GET /health
+2025-09-25 20:38:34 - info - Incoming request: GET /.well-known/appspecific/com.chrome.devtools.json
