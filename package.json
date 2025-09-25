@@ -6,7 +6,10 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "node app.js",
-        "build": "eslint . && prettier --check ."
+        "build": "eslint . && prettier --check .",
+        "dev": "nodemon --inspect app.js",
+        "lint": "eslint .",
+        "prettier:check": "prettier --check ."
     },
     "keywords": [],
     "author": "",
@@ -16,6 +19,7 @@
         "@eslint/js": "^9.36.0",
         "eslint": "^9.36.0",
         "globals": "^16.4.0",
+        "nodemon": "^3.1.10",
         "prettier": "3.6.2"
     },
     "dependencies": {
