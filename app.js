@@ -1,9 +1,10 @@
-import http from 'http';
+// import http from 'http';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import winston from 'winston';
+import express from 'express';
 
 dotenv.config();
 
@@ -26,26 +27,27 @@ const { version } = JSON.parse(fs.readFileSync(packageJSONPath, 'utf-8'));
 
 const port = process.env.PORT;
 
-const server = http.createServer(function (request, response) {
-    logger.info(`Incoming request: ${request.method} ${request.url}`);
+const app = express();
 
-    response.setHeader('Content-Type', 'application/json');
-    response.setHeader('X-Powered-By', 'Node.js');
-    response.setHeader('Cache-Control', 'no-store');
-    response.setHeader('Connection', 'keep-alive');
-    response.setHeader('Date', new Date().toUTCString());
+app.use((req, res, next) => {
+    res.set({
+        'Content-Type': 'application/json',
+        'X-Powered-By': 'Node.js',
+        'Cache-Control': 'no-store',
+        Connection: 'keep-alive',
+        Date: new Date().toUTCString(),
+    });
+    next();
+});
+
+app.get('/health', (req, res) => {
+    logger.info(`Incoming request: ${req.method} ${req.url}`);
 
     try {
-        if (request.url === '/health' && request.method === 'GET') {
-            const data = { version };
-
-            response.end(JSON.stringify(data));
-        } else {
-            response.end();
-        }
+        res.json({ version });
     } catch (err) {
         logger.error(`Error - ${err.message}`);
     }
 });
 
-server.listen(port);
+app.listen(port);
