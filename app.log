@@ -1,3 +1,13 @@
 info - Incoming request: GET /health
 info - Incoming request: GET /health
 info - Incoming request: GET /health
+info - Incoming request: GET /health
+info - Incoming request: GET /.well-known/appspecific/com.chrome.devtools.json
+info - Incoming request: GET /health
+info - Incoming request: GET /.well-known/appspecific/com.chrome.devtools.json
+info - Incoming request: GET /health
+info - Incoming request: GET /.well-known/appspecific/com.chrome.devtools.json
+info - Incoming request: GET /health
+info - Incoming request: GET /.well-known/appspecific/com.chrome.devtools.json
+info - Incoming request: GET /health
+info - Incoming request: GET /.well-known/appspecific/com.chrome.devtools.json
