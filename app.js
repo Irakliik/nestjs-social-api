@@ -7,6 +7,8 @@ import winston from 'winston';
 import express from 'express';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
+import User from './models/users.js';
+import jwt from 'jsonwebtoken';
 
 dotenv.config();
 
@@ -93,6 +95,50 @@ app.post('/signup', async (req, res) => {
         console.log(err);
         res.status(500).send('Server error');
     }
+});
+
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+
+    let loadedUser;
+    User.getUserByEmail(email)
+        .then((user) => {
+            if (!user) {
+                const error = new Error(
+                    'A user with this email could not be found'
+                );
+                error.statusCode = 401;
+                throw error;
+            }
+
+            loadedUser = user;
+            return bcrypt.compare(password, user.passwordHash);
+        })
+        .then((isEqual) => {
+            if (!isEqual) {
+                const error = new Error('Wrong Password');
+                error.statusCode = 401;
+                throw error;
+            }
+
+            const token = jwt.sign(
+                {
+                    email: loadedUser.email,
+                    userId: loadedUser.id,
+                },
+                'somesecretkey',
+                { expiresIn: '1h' }
+            );
+
+            res.status(200).json({ token, userId: loadedUser.id });
+        })
+        .catch((err) => {
+            if (!err.statusCode) {
+                err.statusCode = 500;
+            }
+            console.log(err);
+            res.status(err.statusCode).json({ message: err.message });
+        });
 });
 
 app.listen(port);
