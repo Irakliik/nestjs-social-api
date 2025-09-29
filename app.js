@@ -9,6 +9,7 @@ import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import User from './models/users.js';
 import jwt from 'jsonwebtoken';
+import isAuth from './middleware/is-auth.js';
 
 dotenv.config();
 
@@ -138,6 +139,21 @@ app.post('/login', (req, res) => {
             }
             console.log(err);
             res.status(err.statusCode).json({ message: err.message });
+        });
+});
+
+app.get('/profile', isAuth, (req, res) => {
+    const userId = req.body.id;
+    User.getUserById(userId)
+        .then((user) => {
+            res.status(200).json({
+                firstName: user.firstName,
+                lastName: user.lastName,
+                email: user.email,
+            });
+        })
+        .catch(() => {
+            res.status(500).json({ message: 'Server error' });
         });
 });
 

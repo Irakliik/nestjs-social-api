@@ -19,4 +19,8 @@ export default class User {
             users.find((user) => user.email === email)
         );
     }
+
+    static getUserById(id) {
+        return this.getUsers().find((user) => user.id === id);
+    }
 }
