@@ -5,6 +5,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import winston from 'winston';
 import express from 'express';
+import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 
 dotenv.config();
 
@@ -47,6 +49,49 @@ app.get('/health', (req, res) => {
         res.json({ version });
     } catch (err) {
         logger.error(`Error - ${err.message}`);
+    }
+});
+
+app.post('/signup', async (req, res) => {
+    const { firstName, lastName, email, password } = req.body;
+    const filePath = './database/users.json';
+    const id = crypto.randomUUID();
+
+    try {
+        let users = [];
+
+        try {
+            const fileContent = await fs.promises.readFile(filePath, 'utf8');
+            users = fileContent.trim() ? JSON.parse(fileContent) : [];
+        } catch (err) {
+            if (err.code !== 'ENOENT') {
+                throw err;
+            }
+            users = [];
+        }
+
+        if (users.some((user) => user.email === email)) {
+            return res.status(400).send('Email already registered.');
+        }
+
+        const hash = await bcrypt.hash(password, 12);
+
+        const newUser = {
+            firstName,
+            lastName,
+            email,
+            password: hash,
+            id,
+        };
+
+        users.push(newUser);
+
+        await fs.promises.writeFile(filePath, JSON.stringify(users), 'utf8');
+
+        res.redirect('/');
+    } catch (err) {
+        console.log(err);
+        res.status(500).send('Server error');
     }
 });
 
