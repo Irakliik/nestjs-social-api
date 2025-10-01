@@ -30,12 +30,18 @@ export default class User {
         }
     }
 
-    static addUsers(users) {
+    static storeUsers(users) {
         return fs.promises.writeFile(
             this.usersDBPath,
             JSON.stringify(users),
             'utf8'
         );
+    }
+
+    static addUser(newUser) {
+        return this.getUsers()
+            .then((users) => [...users, newUser])
+            .then((newUsers) => this.storeUsers(newUsers));
     }
 
     static getUserByEmail(email) {
