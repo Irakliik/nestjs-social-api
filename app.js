@@ -9,6 +9,10 @@ import bcrypt from 'bcrypt';
 import User from './models/users.js';
 import jwt from 'jsonwebtoken';
 import isAuth from './middleware/is-auth.js';
+import EventEmitter from 'events';
+import nodemailer from 'nodemailer';
+import sendgridTransports from 'nodemailer-sendgrid-transport';
+import Post from './models/posts.js';
 
 dotenv.config();
 
@@ -23,6 +27,14 @@ const logger = winston.createLogger({
     ],
 });
 
+const transporter = nodemailer.createTransport(
+    sendgridTransports({
+        auth: {
+            api_key: process.env.SENDGRID_API_KEY,
+        },
+    })
+);
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -30,6 +42,17 @@ const packageJSONPath = path.join(__dirname, 'package.json');
 const { version } = JSON.parse(fs.readFileSync(packageJSONPath, 'utf-8'));
 
 const port = process.env.PORT;
+
+const event = new EventEmitter();
+
+event.on('profileUpdated', (email) => {
+    transporter.sendMail({
+        to: email,
+        from: process.env.ORG_EMAIL,
+        subject: 'Update Succeded!',
+        html: '<h1>You successfully updated!</h1>',
+    });
+});
 
 const app = express();
 
@@ -149,12 +172,27 @@ app.get('/profile', isAuth, (req, res) => {
 });
 
 app.put('/update-user', isAuth, (req, res) => {
-    const { id, firstName, lastName } = req.body;
+    const { id, firstName, lastName, email } = req.body;
 
     User.updateUser(id, firstName, lastName)
         .then(() => {
+            event.emit('profileUpdated', email);
             logger.info('updated successfully');
             res.status(201).json({ message: 'updated successfully' });
+        })
+        .catch((err) => {
+            logger.error(`Error - ${err.message}`);
+        });
+});
+
+app.post('user/create-post', isAuth, (req, res) => {
+    const { title, description, authorId } = req.body;
+
+    const newPost = new Post(title, description, authorId);
+    Post.storePosts(newPost)
+        .then(() => {
+            logger.info('posted successfully');
+            res.status(201).json({ message: 'posted successfully' });
         })
         .catch((err) => {
             logger.error(`Error - ${err.message}`);
