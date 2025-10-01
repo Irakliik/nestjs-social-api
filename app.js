@@ -79,20 +79,22 @@ app.get('/health', (req, res) => {
 
 app.post('/signup', async (req, res) => {
     const { firstName, lastName, email, password } = req.body;
-    const filePath = './database/users.json';
+    // const filePath = './database/users.json';
 
     try {
-        let users = [];
+        // let users = [];
 
-        try {
-            const fileContent = await fs.promises.readFile(filePath, 'utf8');
-            users = fileContent.trim() ? JSON.parse(fileContent) : [];
-        } catch (err) {
-            if (err.code !== 'ENOENT') {
-                throw err;
-            }
-            users = [];
-        }
+        // try {
+        //     const fileContent = await fs.promises.readFile(filePath, 'utf8');
+        //     users = fileContent.trim() ? JSON.parse(fileContent) : [];
+        // } catch (err) {
+        //     if (err.code !== 'ENOENT') {
+        //         throw err;
+        //     }
+        //     users = [];
+        // }
+
+        const users = await User.getUsers();
 
         if (users.some((user) => user.email === email)) {
             return res.status(400).send('Email already registered.');
@@ -103,9 +105,9 @@ app.post('/signup', async (req, res) => {
         const newUser = new User(firstName, lastName, email, hash);
         users.push(newUser);
 
-        await fs.promises.writeFile(filePath, JSON.stringify(users), 'utf8');
+        await User.addUser(users);
 
-        res.redirect('/');
+        res.status(201).json({ message: 'user added successfully!s' });
     } catch (err) {
         console.log(err);
         res.status(500).send('Server error');
