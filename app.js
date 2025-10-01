@@ -5,7 +5,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import winston from 'winston';
 import express from 'express';
-import crypto from 'crypto';
 import bcrypt from 'bcrypt';
 import User from './models/users.js';
 import jwt from 'jsonwebtoken';
@@ -58,7 +57,6 @@ app.get('/health', (req, res) => {
 app.post('/signup', async (req, res) => {
     const { firstName, lastName, email, password } = req.body;
     const filePath = './database/users.json';
-    const id = crypto.randomUUID();
 
     try {
         let users = [];
@@ -79,14 +77,7 @@ app.post('/signup', async (req, res) => {
 
         const hash = await bcrypt.hash(password, 12);
 
-        const newUser = {
-            firstName,
-            lastName,
-            email,
-            password: hash,
-            id,
-        };
-
+        const newUser = new User(firstName, lastName, email, hash);
         users.push(newUser);
 
         await fs.promises.writeFile(filePath, JSON.stringify(users), 'utf8');
@@ -154,6 +145,19 @@ app.get('/profile', isAuth, (req, res) => {
         })
         .catch(() => {
             res.status(500).json({ message: 'Server error' });
+        });
+});
+
+app.put('/update-user', isAuth, (req, res) => {
+    const { id, firstName, lastName } = req.body;
+
+    User.updateUser(id, firstName, lastName)
+        .then(() => {
+            logger.info('updated successfully');
+            res.status(201).json({ message: 'updated successfully' });
+        })
+        .catch((err) => {
+            logger.error(`Error - ${err.message}`);
         });
 });
 
