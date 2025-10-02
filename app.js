@@ -222,6 +222,28 @@ app.get('/user/posts', isAuth, async (req, res) => {
     }
 });
 
-app.delete('user/post/postId');
+app.delete('/user/post/:postId', isAuth, async (req, res) => {
+    const userId = req.userId;
+    const postId = req.postId;
+
+    try {
+        const post = await Post.getPostById(postId);
+
+        if (post.authorId !== userId) {
+            logger.error('Not authorized to delete this post!');
+
+            return res
+                .status(403)
+                .json({ message: 'Not authorized to delete this post!' });
+        }
+
+        await Post.deletePost(postId);
+        res.status(200).json({ message: 'Post deleted successfully' });
+        logger.info('Post deleted successfully');
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+        logger.error(`Error - ${err.message}`);
+    }
+});
 
 app.listen(port);

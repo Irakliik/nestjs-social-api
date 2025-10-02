@@ -50,4 +50,16 @@ export default class Post {
             posts.filter((post) => post.authorId === userId)
         );
     }
+
+    static getPostById(postId) {
+        return this.getPosts().then((posts) =>
+            posts.find((post) => post.id === postId)
+        );
+    }
+
+    static deletePost(postId) {
+        return this.getPosts()
+            .then((posts) => posts.filter((post) => post.id !== postId))
+            .then((posts) => this.storePosts(posts));
+    }
 }
