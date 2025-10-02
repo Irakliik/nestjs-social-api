@@ -19,6 +19,5 @@ export default (req, res, next) => {
     }
 
     req.userId = decodedToken.userId;
-    res.fullName = decodedToken.fullName;
     next();
 };

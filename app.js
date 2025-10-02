@@ -133,7 +133,6 @@ app.post('/login', (req, res) => {
 
             const token = jwt.sign(
                 {
-                    fullname: loadedUser.firstName + ' ' + loadedUser.lastName,
                     email: loadedUser.email,
                     userId: loadedUser.id,
                 },
@@ -197,32 +196,30 @@ app.post('/user/posts', isAuth, (req, res) => {
         });
 });
 
-app.get('/user/posts', isAuth, (req, res) => {
+app.get('/user/posts', isAuth, async (req, res) => {
     const userId = req.userId;
-    const fullName = req.fullName;
 
-    Post.getPostsById(userId)
-        .then((posts) => {
-            const { title, description, createdDate } = posts;
-            if (posts.length > 0) {
-                res.status(200).json({
-                    title,
-                    description,
-                    createdDate,
-                    author: fullName,
-                });
-                logger.info('Posts sent successfully!');
-            } else {
-                const error = new error('No posts Found!');
-                error.statusCode = 204;
-                throw error;
-            }
-        })
-        .catch((err) => {
-            const status = err.statusCode || 500;
-            logger.error(`Error - ${err.message}`);
-            res.status(status).json({ errMessage: err.message });
+    try {
+        const user = await User.getUserById(userId);
+        const postsArr = await Post.getPostsByAuthorId(userId);
+
+        const posts = postsArr.map((post) => {
+            const { title, description, createdDate } = post;
+            const authorName = user.firstName + ' ' + user.lastName;
+
+            return { title, description, createdDate, authorName };
         });
+
+        if (posts.length === 0) {
+            logger.info('No posts found for this user');
+        } else {
+            logger.info('Posts sent successfully!');
+        }
+        res.status(200).json(posts);
+    } catch (err) {
+        logger.error(`Error - ${err.message}`);
+        res.status(500).json({ errMessage: err.message });
+    }
 });
 
 app.listen(port);
