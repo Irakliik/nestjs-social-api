@@ -1,4 +1,3 @@
-// import http from 'http';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
@@ -13,6 +12,14 @@ import EventEmitter from 'events';
 import nodemailer from 'nodemailer';
 import sendgridTransports from 'nodemailer-sendgrid-transport';
 import Post from './models/posts.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const packageJSONPath = path.join(__dirname, 'package.json');
+const { version } = JSON.parse(fs.readFileSync(packageJSONPath, 'utf-8'));
+
+const port = process.env.PORT;
 
 dotenv.config();
 
@@ -34,14 +41,6 @@ const transporter = nodemailer.createTransport(
         },
     })
 );
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const packageJSONPath = path.join(__dirname, 'package.json');
-const { version } = JSON.parse(fs.readFileSync(packageJSONPath, 'utf-8'));
-
-const port = process.env.PORT;
 
 const event = new EventEmitter();
 
