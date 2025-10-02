@@ -79,21 +79,8 @@ app.get('/health', (req, res) => {
 
 app.post('/signup', async (req, res) => {
     const { firstName, lastName, email, password } = req.body;
-    // const filePath = './database/users.json';
 
     try {
-        // let users = [];
-
-        // try {
-        //     const fileContent = await fs.promises.readFile(filePath, 'utf8');
-        //     users = fileContent.trim() ? JSON.parse(fileContent) : [];
-        // } catch (err) {
-        //     if (err.code !== 'ENOENT') {
-        //         throw err;
-        //     }
-        //     users = [];
-        // }
-
         const users = await User.getUsers();
 
         if (users.some((user) => user.email === email)) {
@@ -107,7 +94,7 @@ app.post('/signup', async (req, res) => {
 
         await User.addUser(users);
 
-        res.status(201).json({ message: 'user added successfully!s' });
+        res.status(201).json({ message: 'user added successfully!' });
     } catch (err) {
         console.log(err);
         res.status(500).send('Server error');
