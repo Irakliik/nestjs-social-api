@@ -1,15 +1,19 @@
 import fs from 'fs';
+import crypto from 'crypto';
+
 export default class Post {
     constructor(
         title,
         description,
         authorId,
-        dateCreated = new Date().toUTCString()
+        dateCreated = new Date().toUTCString(),
+        id = crypto.randomUUID()
     ) {
         this.title = title;
         this.description = description;
         this.authorId = authorId;
         this.dateCreated = dateCreated;
+        this.id = id;
     }
 
     static postsDBPath = './database/posts.json';

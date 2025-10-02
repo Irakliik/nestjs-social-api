@@ -181,7 +181,7 @@ app.put('/user/profile', isAuth, (req, res) => {
         });
 });
 
-app.post('/user/posts', isAuth, (req, res) => {
+app.post('/user/post', isAuth, (req, res) => {
     const { title, description } = req.body;
     const authorId = req.userId;
 
@@ -221,5 +221,7 @@ app.get('/user/posts', isAuth, async (req, res) => {
         res.status(500).json({ errMessage: err.message });
     }
 });
+
+app.delete('user/post/postId');
 
 app.listen(port);
