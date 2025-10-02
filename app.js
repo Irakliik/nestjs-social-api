@@ -224,7 +224,7 @@ app.get('/user/posts', isAuth, async (req, res) => {
 
 app.delete('/user/post/:postId', isAuth, async (req, res) => {
     const userId = req.userId;
-    const postId = req.postId;
+    const postId = req.params.postId;
 
     try {
         const post = await Post.getPostById(postId);
@@ -240,6 +240,32 @@ app.delete('/user/post/:postId', isAuth, async (req, res) => {
         await Post.deletePost(postId);
         res.status(200).json({ message: 'Post deleted successfully' });
         logger.info('Post deleted successfully');
+    } catch (err) {
+        res.status(500).json({ message: 'Server error' });
+        logger.error(`Error - ${err.message}`);
+    }
+});
+
+app.put('/user/post/:postId', isAuth, async (req, res) => {
+    const userId = req.userId;
+    const postId = req.params.postId;
+    const { title: newTitle, description: newDescription } = req.body;
+
+    try {
+        const post = await Post.getPostById(postId);
+
+        if (post.authorId !== userId) {
+            logger.error('Not authorized to update this post!');
+
+            return res
+                .status(403)
+                .json({ message: 'Not authorized to update this post!' });
+        }
+
+        await Post.updatePost(postId, newTitle, newDescription);
+
+        res.status(200).json({ message: 'Post updated successfully' });
+        logger.info('Post updated successfully');
     } catch (err) {
         res.status(500).json({ message: 'Server error' });
         logger.error(`Error - ${err.message}`);

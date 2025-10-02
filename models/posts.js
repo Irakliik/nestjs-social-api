@@ -62,4 +62,16 @@ export default class Post {
             .then((posts) => posts.filter((post) => post.id !== postId))
             .then((posts) => this.storePosts(posts));
     }
+
+    static async updatePost(postId, newTitle, newDescription) {
+        const posts = await this.getPosts();
+
+        const updatedPosts = posts.map((post) =>
+            post.id === postId
+                ? { ...post, title: newTitle, description: newDescription }
+                : post
+        );
+
+        await this.storePosts(updatedPosts);
+    }
 }
