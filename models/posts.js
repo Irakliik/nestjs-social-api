@@ -40,4 +40,10 @@ export default class Post {
             .then((posts) => [...posts, newPost])
             .then((newPosts) => this.storePosts(newPosts));
     }
+
+    static getPostsById(userId) {
+        return this.getPosts().then((posts) =>
+            posts.filter((post) => post.authorId === userId)
+        );
+    }
 }

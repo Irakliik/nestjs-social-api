@@ -12,6 +12,7 @@ import EventEmitter from 'events';
 import nodemailer from 'nodemailer';
 import sendgridTransports from 'nodemailer-sendgrid-transport';
 import Post from './models/posts.js';
+import bodyParser from 'body-parser';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,6 +52,8 @@ event.on('profileUpdated', (email) => {
 });
 
 const app = express();
+
+app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use((req, res, next) => {
     const headers = {
@@ -130,6 +133,7 @@ app.post('/login', (req, res) => {
 
             const token = jwt.sign(
                 {
+                    fullname: loadedUser.firstName + ' ' + loadedUser.lastName,
                     email: loadedUser.email,
                     userId: loadedUser.id,
                 },
@@ -148,8 +152,8 @@ app.post('/login', (req, res) => {
         });
 });
 
-app.get('/profile', isAuth, (req, res) => {
-    const userId = req.body.id;
+app.get('/user/profile', isAuth, (req, res) => {
+    const userId = req.userId;
     User.getUserById(userId)
         .then((user) => {
             res.status(200).json({
@@ -163,10 +167,11 @@ app.get('/profile', isAuth, (req, res) => {
         });
 });
 
-app.put('/update-user', isAuth, (req, res) => {
-    const { id, firstName, lastName, email } = req.body;
+app.put('/user/profile', isAuth, (req, res) => {
+    const { firstName, lastName, email } = req.body;
+    const userId = req.userId;
 
-    User.updateUser(id, firstName, lastName)
+    User.updateUser(userId, firstName, lastName)
         .then(() => {
             event.emit('profileUpdated', email);
             logger.info('updated successfully');
@@ -177,8 +182,9 @@ app.put('/update-user', isAuth, (req, res) => {
         });
 });
 
-app.post('user/create-post', isAuth, (req, res) => {
-    const { title, description, authorId } = req.body;
+app.post('/user/posts', isAuth, (req, res) => {
+    const { title, description } = req.body;
+    const authorId = req.userId;
 
     const newPost = new Post(title, description, authorId);
     Post.storePosts(newPost)
@@ -188,6 +194,34 @@ app.post('user/create-post', isAuth, (req, res) => {
         })
         .catch((err) => {
             logger.error(`Error - ${err.message}`);
+        });
+});
+
+app.get('/user/posts', isAuth, (req, res) => {
+    const userId = req.userId;
+    const fullName = req.fullName;
+
+    Post.getPostsById(userId)
+        .then((posts) => {
+            const { title, description, createdDate } = posts;
+            if (posts.length > 0) {
+                res.status(200).json({
+                    title,
+                    description,
+                    createdDate,
+                    author: fullName,
+                });
+                logger.info('Posts sent successfully!');
+            } else {
+                const error = new error('No posts Found!');
+                error.statusCode = 204;
+                throw error;
+            }
+        })
+        .catch((err) => {
+            const status = err.statusCode || 500;
+            logger.error(`Error - ${err.message}`);
+            res.status(status).json({ errMessage: err.message });
         });
 });
 
