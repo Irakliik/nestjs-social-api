@@ -16,12 +16,9 @@ import Post from './models/posts.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const packageJSONPath = path.join(__dirname, 'package.json');
-const { version } = JSON.parse(fs.readFileSync(packageJSONPath, 'utf-8'));
+dotenv.config();
 
 const port = process.env.PORT;
-
-dotenv.config();
 
 const logger = winston.createLogger({
     level: 'info',
@@ -56,20 +53,27 @@ event.on('profileUpdated', (email) => {
 const app = express();
 
 app.use((req, res, next) => {
-    res.set({
+    const headers = {
         'Content-Type': 'application/json',
         'X-Powered-By': 'Node.js',
         'Cache-Control': 'no-store',
         Connection: 'keep-alive',
         Date: new Date().toUTCString(),
-    });
+    };
+
+    for (const [header, value] of Object.entries(headers)) {
+        res.setHeader(header, value);
+    }
     next();
 });
 
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
     logger.info(`Incoming request: ${req.method} ${req.url}`);
+    const packageJSONPath = path.join(__dirname, 'package.json');
 
     try {
+        const data = await fs.promises.readFile(packageJSONPath, 'utf-8');
+        const { version } = JSON.parse(data);
         res.json({ version });
     } catch (err) {
         logger.error(`Error - ${err.message}`);
