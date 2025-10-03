@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 
 export default (req, res, next) => {
-    const token = req.get('Authorization');
+    const token = req.get('Authorization').split(' ')[1];
 
     let decodedToken;
 
