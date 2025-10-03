@@ -2,7 +2,6 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import winston from 'winston';
 import express from 'express';
 import bcrypt from 'bcrypt';
 import User from './models/users.js';
@@ -11,8 +10,9 @@ import isAuth from './middleware/is-auth.js';
 import EventEmitter from 'events';
 import nodemailer from 'nodemailer';
 import sendgridTransports from 'nodemailer-sendgrid-transport';
-import Post from './models/posts.js';
 import bodyParser from 'body-parser';
+import Router from './routers/users.js';
+import logger from './utiil.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,17 +20,6 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 
 const port = process.env.PORT;
-
-const logger = winston.createLogger({
-    level: 'info',
-    format: winston.format.printf(({ level, message }) => {
-        return `${level} - ${message}`;
-    }),
-    transports: [
-        new winston.transports.Console(),
-        new winston.transports.File({ filename: 'app.log' }),
-    ],
-});
 
 const transporter = nodemailer.createTransport(
     sendgridTransports({
@@ -151,125 +140,6 @@ app.post('/login', (req, res) => {
         });
 });
 
-app.get('/user/profile', isAuth, (req, res) => {
-    const userId = req.userId;
-    User.getUserById(userId)
-        .then((user) => {
-            res.status(200).json({
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-            });
-        })
-        .catch(() => {
-            res.status(500).json({ message: 'Server error' });
-        });
-});
-
-app.put('/user/profile', isAuth, (req, res) => {
-    const { firstName, lastName, email } = req.body;
-    const userId = req.userId;
-
-    User.updateUser(userId, firstName, lastName)
-        .then(() => {
-            event.emit('profileUpdated', email);
-            logger.info('updated successfully');
-            res.status(201).json({ message: 'updated successfully' });
-        })
-        .catch((err) => {
-            logger.error(`Error - ${err.message}`);
-        });
-});
-
-app.post('/user/post', isAuth, (req, res) => {
-    const { title, description } = req.body;
-    const authorId = req.userId;
-
-    const newPost = new Post(title, description, authorId);
-    Post.storePosts(newPost)
-        .then(() => {
-            logger.info('posted successfully');
-            res.status(201).json({ message: 'posted successfully' });
-        })
-        .catch((err) => {
-            logger.error(`Error - ${err.message}`);
-        });
-});
-
-app.get('/user/posts', isAuth, async (req, res) => {
-    const userId = req.userId;
-
-    try {
-        const user = await User.getUserById(userId);
-        const postsArr = await Post.getPostsByAuthorId(userId);
-
-        const posts = postsArr.map((post) => {
-            const { title, description, createdDate } = post;
-            const authorName = user.firstName + ' ' + user.lastName;
-
-            return { title, description, createdDate, authorName };
-        });
-
-        if (posts.length === 0) {
-            logger.info('No posts found for this user');
-        } else {
-            logger.info('Posts sent successfully!');
-        }
-        res.status(200).json(posts);
-    } catch (err) {
-        logger.error(`Error - ${err.message}`);
-        res.status(500).json({ errMessage: err.message });
-    }
-});
-
-app.delete('/user/post/:postId', isAuth, async (req, res) => {
-    const userId = req.userId;
-    const postId = req.params.postId;
-
-    try {
-        const post = await Post.getPostById(postId);
-
-        if (post.authorId !== userId) {
-            logger.error('Not authorized to delete this post!');
-
-            return res
-                .status(403)
-                .json({ message: 'Not authorized to delete this post!' });
-        }
-
-        await Post.deletePost(postId);
-        res.status(200).json({ message: 'Post deleted successfully' });
-        logger.info('Post deleted successfully');
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-        logger.error(`Error - ${err.message}`);
-    }
-});
-
-app.put('/user/post/:postId', isAuth, async (req, res) => {
-    const userId = req.userId;
-    const postId = req.params.postId;
-    const { title: newTitle, description: newDescription } = req.body;
-
-    try {
-        const post = await Post.getPostById(postId);
-
-        if (post.authorId !== userId) {
-            logger.error('Not authorized to update this post!');
-
-            return res
-                .status(403)
-                .json({ message: 'Not authorized to update this post!' });
-        }
-
-        await Post.updatePost(postId, newTitle, newDescription);
-
-        res.status(200).json({ message: 'Post updated successfully' });
-        logger.info('Post updated successfully');
-    } catch (err) {
-        res.status(500).json({ message: 'Server error' });
-        logger.error(`Error - ${err.message}`);
-    }
-});
+app.use('/user', isAuth, Router);
 
 app.listen(port);
