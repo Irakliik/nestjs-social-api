@@ -29,9 +29,9 @@ const transporter = nodemailer.createTransport(
     })
 );
 
-const event = new EventEmitter();
+export const userEvent = new EventEmitter();
 
-event.on('profileUpdated', (email) => {
+userEvent.on('profileUpdated', (email) => {
     transporter.sendMail({
         to: email,
         from: process.env.ORG_EMAIL,

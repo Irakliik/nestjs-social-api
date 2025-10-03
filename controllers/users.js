@@ -1,3 +1,4 @@
+import { userEvent } from '../app.js';
 import Post from '../models/posts.js';
 import User from '../models/users.js';
 import logger from '../util.js';
@@ -23,7 +24,7 @@ const putUserProfile = (req, res) => {
 
     User.updateUser(userId, firstName, lastName)
         .then(() => {
-            event.emit('profileUpdated', email);
+            userEvent.emit('profileUpdated', email);
             logger.info('updated successfully');
             res.status(201).json({ message: 'updated successfully' });
         })

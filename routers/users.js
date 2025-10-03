@@ -7,6 +7,7 @@ import {
     putPost,
     putUserProfile,
 } from '../controllers/users.js';
+
 const Router = express().router;
 
 Router.get('/profile', getUserProfile);
