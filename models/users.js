@@ -73,6 +73,6 @@ export default class User {
 
                 return updatedUsers;
             })
-            .then((updatedUsers) => this.addUsers(updatedUsers));
+            .then((updatedUsers) => this.storeUsers(updatedUsers));
     }
 }
