@@ -7,13 +7,17 @@ const getUserProfile = (req, res) => {
     const userId = req.userId;
     User.getUserById(userId)
         .then((user) => {
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
             res.status(200).json({
                 firstName: user.firstName,
                 lastName: user.lastName,
                 email: user.email,
             });
         })
-        .catch(() => {
+        .catch((err) => {
+            logger.error(`Error - ${err.message}`);
             res.status(500).json({ message: 'Server error' });
         });
 };
@@ -30,6 +34,7 @@ const putUserProfile = (req, res) => {
         })
         .catch((err) => {
             logger.error(`Error - ${err.message}`);
+            res.status(500).json({ message: 'Server error' });
         });
 };
 
@@ -37,14 +42,21 @@ const postPost = (req, res) => {
     const { title, description } = req.body;
     const authorId = req.userId;
 
+    if (!title || !description) {
+        return res
+            .status(400)
+            .json({ message: 'Title and description are required.' });
+    }
+
     const newPost = new Post(title, description, authorId);
-    Post.storePosts(newPost)
+    Post.addPost(newPost)
         .then(() => {
             logger.info('posted successfully');
             res.status(201).json({ message: 'posted successfully' });
         })
         .catch((err) => {
             logger.error(`Error - ${err.message}`);
+            res.status(500).json({ message: 'Server error' });
         });
 };
 
@@ -53,13 +65,17 @@ const getPosts = async (req, res) => {
 
     try {
         const user = await User.getUserById(userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
         const postsArr = await Post.getPostsByAuthorId(userId);
 
         const posts = postsArr.map((post) => {
-            const { title, description, createdDate } = post;
+            const { title, description, dateCreated } = post;
             const authorName = user.firstName + ' ' + user.lastName;
 
-            return { title, description, createdDate, authorName };
+            return { title, description, dateCreated, authorName };
         });
 
         if (posts.length === 0) {
