@@ -12,7 +12,7 @@ import nodemailer from 'nodemailer';
 import sendgridTransports from 'nodemailer-sendgrid-transport';
 import bodyParser from 'body-parser';
 import Router from './routers/users.js';
-import logger from './utiil.js';
+import logger from './util.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
