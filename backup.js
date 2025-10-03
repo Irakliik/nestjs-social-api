@@ -5,8 +5,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const sourceFilePath = path.join(__dirname, 'users.json');
-const backupFilePath = path.join(__dirname, 'user-backup.json');
+const sourceFilePath = path.join(__dirname, 'database', 'users.json');
+const backupFilePath = path.join(__dirname, 'database', 'users-backup.json');
 
 const readerFile = fs.createReadStream(sourceFilePath, { encoding: 'utf8' });
 const backupFile = fs.createWriteStream(backupFilePath, { encoding: 'utf8' });
