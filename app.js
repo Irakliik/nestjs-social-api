@@ -87,7 +87,7 @@ app.post('/signup', async (req, res) => {
         const newUser = new User(firstName, lastName, email, hash);
         users.push(newUser);
 
-        await User.addUser(users);
+        await User.addUser(newUser);
 
         res.status(201).json({ message: 'user added successfully!' });
     } catch (err) {
