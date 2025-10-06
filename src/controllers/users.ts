@@ -2,9 +2,55 @@ import { userEvent } from '../app.js';
 import Post from '../models/posts.js';
 import User from '../models/users.js';
 import logger from '../util.js';
+import type { Request, RequestHandler, Response } from 'express';
 
-const getUserProfile = (req, res) => {
-    const userId = req.userId;
+interface HttpError extends Error {
+    statusCode?: number;
+}
+
+interface AuthRequest extends Request {
+    userId: string;
+}
+// interface PostActionRequest extends AuthRequest {
+//     params: {
+//         postId: string;
+//     };
+// }
+
+// interface AuthRequest<TParams = any> extends Request<TParams> {
+//     userId: string;
+// }
+
+interface PostActionRequest {
+    postId: string;
+}
+
+interface PutPostBody {
+    title: string;
+    description: string;
+}
+
+interface PutPostRequest extends PostActionRequest {
+    body: {
+        title: string;
+        description: string;
+    };
+}
+
+interface PutUserProfileRequestBody {
+    firstName: string;
+    lastName: string;
+    email: string;
+}
+
+interface CreatePostRequestBody {
+    title: string;
+    description: string;
+}
+
+const getUserProfile = (req: Request, res: Response) => {
+    const userId = (req as AuthRequest).userId;
+
     User.getUserById(userId)
         .then((user) => {
             if (!user) {
@@ -22,9 +68,12 @@ const getUserProfile = (req, res) => {
         });
 };
 
-const putUserProfile = (req, res) => {
+const putUserProfile = (
+    req: Request<{}, {}, PutUserProfileRequestBody>,
+    res: Response
+) => {
     const { firstName, lastName, email } = req.body;
-    const userId = req.userId;
+    const userId = (req as AuthRequest).userId;
 
     User.updateUser(userId, firstName, lastName)
         .then(() => {
@@ -38,9 +87,12 @@ const putUserProfile = (req, res) => {
         });
 };
 
-const postPost = (req, res) => {
+const postPost = (
+    req: Request<{}, {}, CreatePostRequestBody>,
+    res: Response
+) => {
     const { title, description } = req.body;
-    const authorId = req.userId;
+    const authorId = (req as AuthRequest).userId;
 
     if (!title || !description) {
         return res
@@ -60,8 +112,9 @@ const postPost = (req, res) => {
         });
 };
 
-const getPosts = async (req, res) => {
-    const userId = req.userId;
+const getPosts = async (req: Request, res: Response) => {
+    // const userId = (req as AuthRequest).userId;
+    const userId = (req as unknown as AuthRequest).userId;
 
     try {
         const user = await User.getUserById(userId);
@@ -84,18 +137,25 @@ const getPosts = async (req, res) => {
             logger.info('Posts sent successfully!');
         }
         res.status(200).json(posts);
-    } catch (err) {
+    } catch (error) {
+        const err = error as HttpError;
         logger.error(`Error - ${err.message}`);
         res.status(500).json({ errMessage: err.message });
     }
 };
 
-const deletePost = async (req, res) => {
-    const userId = req.userId;
+const deletePost = async (req: Request<{ postId: string }>, res: Response) => {
+    const userId = (req as unknown as AuthRequest).userId;
+
     const postId = req.params.postId;
 
     try {
         const post = await Post.getPostById(postId);
+
+        if (!post) {
+            const error = new Error('No Post found');
+            throw error;
+        }
 
         if (post.authorId !== userId) {
             logger.error('Not authorized to delete this post!');
@@ -108,19 +168,31 @@ const deletePost = async (req, res) => {
         await Post.deletePost(postId);
         res.status(200).json({ message: 'Post deleted successfully' });
         logger.info('Post deleted successfully');
-    } catch (err) {
+    } catch (error) {
+        const err = error as HttpError;
+        logger.error(`Error - ${err.message}`);
         res.status(500).json({ message: 'Server error' });
         logger.error(`Error - ${err.message}`);
     }
 };
 
-const putPost = async (req, res) => {
-    const userId = req.userId;
+const putPost = async (
+    req: Request<{ postId: string }, {}, PutPostBody>,
+    res: Response
+) => {
+    const userId = (req as unknown as AuthRequest).userId;
     const postId = req.params.postId;
     const { title: newTitle, description: newDescription } = req.body;
 
     try {
         const post = await Post.getPostById(postId);
+
+        if (!post) {
+            const error = new Error(
+                `Could not find Post with the id ${postId} `
+            );
+            throw error;
+        }
 
         if (post.authorId !== userId) {
             logger.error('Not authorized to update this post!');
@@ -134,7 +206,8 @@ const putPost = async (req, res) => {
 
         res.status(200).json({ message: 'Post updated successfully' });
         logger.info('Post updated successfully');
-    } catch (err) {
+    } catch (error) {
+        const err = error as HttpError;
         res.status(500).json({ message: 'Server error' });
         logger.error(`Error - ${err.message}`);
     }

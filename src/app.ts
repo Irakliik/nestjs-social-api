@@ -13,10 +13,24 @@ import sendgridTransports from 'nodemailer-sendgrid-transport';
 import bodyParser from 'body-parser';
 import Router from './routers/users.js';
 import logger from './util.js';
+import type { NextFunction, Request, Response } from 'express';
+
+interface LoginBody {
+    email: string;
+    password: string;
+}
+
+interface SignupBody extends LoginBody {
+    firstName: string;
+    lastName: string;
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+interface HttpError extends Error {
+    statusCode?: number;
+}
 dotenv.config();
 
 const port = process.env.PORT;
@@ -44,7 +58,7 @@ const app = express();
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.use((req, res, next) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
     const headers = {
         'Content-Type': 'application/json',
         'X-Powered-By': 'Node.js',
@@ -59,26 +73,27 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/health', async (req, res) => {
+app.get('/health', async (req: Request, res: Response) => {
     logger.info(`Incoming request: ${req.method} ${req.url}`);
-    const packageJSONPath = path.join(__dirname, 'package.json');
+    const packageJSONPath = path.join(__dirname, '..', 'package.json');
 
     try {
         const data = await fs.promises.readFile(packageJSONPath, 'utf-8');
         const { version } = JSON.parse(data);
         res.json({ version });
-    } catch (err) {
+    } catch (error) {
+        const err = error as Error;
         logger.error(`Error - ${err.message}`);
     }
 });
 
-app.post('/signup', async (req, res) => {
+app.post('/signup', async (req: Request<{}, {}, SignupBody>, res: Response) => {
     const { firstName, lastName, email, password } = req.body;
 
     try {
         const users = await User.getUsers();
 
-        if (users.some((user) => user.email === email)) {
+        if (users.some((user: User) => user.email === email)) {
             return res.status(400).send('Email already registered.');
         }
 
@@ -96,14 +111,14 @@ app.post('/signup', async (req, res) => {
     }
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', (req: Request<{}, {}, LoginBody>, res) => {
     const { email, password } = req.body;
 
-    let loadedUser;
+    let loadedUser: User;
     User.getUserByEmail(email)
         .then((user) => {
             if (!user) {
-                const error = new Error(
+                const error: HttpError = new Error(
                     'A user with this email could not be found'
                 );
                 error.statusCode = 401;
@@ -115,7 +130,7 @@ app.post('/login', (req, res) => {
         })
         .then((isEqual) => {
             if (!isEqual) {
-                const error = new Error('Wrong Password');
+                const error: HttpError = new Error('Wrong Password');
                 error.statusCode = 401;
                 throw error;
             }

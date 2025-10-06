@@ -2,22 +2,16 @@ import fs from 'fs';
 import crypto from 'crypto';
 export default class User {
     constructor(
-        firstName,
-        lastName,
-        email,
-        passwordHash,
-        id = crypto.randomUUID()
-    ) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.passwordHash = passwordHash;
-        this.id = id;
-    }
+        readonly firstName: string,
+        readonly lastName: string,
+        public email: string,
+        readonly passwordHash: string,
+        readonly id: string = crypto.randomUUID()
+    ) {}
 
     static usersDBPath = './database/users.json';
 
-    static async getUsers() {
+    static async getUsers(): Promise<User[]> {
         try {
             const dataStr = await fs.promises.readFile(
                 this.usersDBPath,
@@ -25,12 +19,16 @@ export default class User {
             );
             return dataStr.trim() ? JSON.parse(dataStr) : [];
         } catch (err) {
-            if (err.code === 'ENOENT') return [];
+            if (
+                err instanceof Error &&
+                (err as NodeJS.ErrnoException).code === 'ENOENT'
+            )
+                return [];
             throw err;
         }
     }
 
-    static storeUsers(users) {
+    static storeUsers(users: User[]) {
         return fs.promises.writeFile(
             this.usersDBPath,
             JSON.stringify(users),
@@ -38,34 +36,36 @@ export default class User {
         );
     }
 
-    static addUser(newUser) {
+    static addUser(newUser: User) {
         return this.getUsers()
             .then((users) => [...users, newUser])
             .then((newUsers) => this.storeUsers(newUsers));
     }
 
-    static getUserByEmail(email) {
+    static getUserByEmail(email: string) {
         return this.getUsers().then((users) =>
-            users.find((user) => user.email === email)
+            users.find((user: User) => user.email === email)
         );
     }
 
-    static getUserById(id) {
+    static getUserById(id: string) {
         return this.getUsers().then((users) =>
-            users.find((user) => user.id === id)
+            users.find((user: User) => user.id === id)
         );
     }
 
-    static updateUser(id, newFirstName, newLastName) {
+    static updateUser(id: string, newFirstName: string, newLastName: string) {
         return this.getUsers()
             .then((users) => {
-                const updatedUsers = users.map((user) => {
+                const updatedUsers: User[] = users.map((user: User) => {
                     if (user.id === id) {
-                        return {
-                            ...user,
-                            firstName: newFirstName,
-                            lastName: newLastName,
-                        };
+                        return new User(
+                            newFirstName,
+                            newLastName,
+                            user.email,
+                            user.passwordHash,
+                            user.id
+                        );
                     } else {
                         return user;
                     }
