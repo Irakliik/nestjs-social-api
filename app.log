@@ -46,3 +46,5 @@ error - Error - ENOENT: no such file or directory, open 'C:\Users\user\Desktop\N
 info - Incoming request: GET /health
 error - Error - ENOENT: no such file or directory, open 'C:\Users\user\Desktop\Node.Js-leverx\homework\dist\package.json'
 info - Incoming request: GET /health
+info - Incoming request: GET /health
+info - Incoming request: GET /health
