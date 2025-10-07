@@ -13,24 +13,13 @@ import sendgridTransports from 'nodemailer-sendgrid-transport';
 import bodyParser from 'body-parser';
 import Router from './routers/users.js';
 import logger from './util.js';
+
 import type { NextFunction, Request, Response } from 'express';
-
-interface LoginBody {
-    email: string;
-    password: string;
-}
-
-interface SignupBody extends LoginBody {
-    firstName: string;
-    lastName: string;
-}
+import type { HttpError, LoginBody, SignupBody } from './types/interfaces.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-interface HttpError extends Error {
-    statusCode?: number;
-}
 dotenv.config();
 
 const port = process.env.PORT;

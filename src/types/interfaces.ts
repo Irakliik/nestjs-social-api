@@ -38,3 +38,13 @@ export interface DecodedToken extends JwtPayload {
     email: string;
     userId: string;
 }
+
+export interface LoginBody {
+    email: string;
+    password: string;
+}
+
+export interface SignupBody extends LoginBody {
+    firstName: string;
+    lastName: string;
+}
