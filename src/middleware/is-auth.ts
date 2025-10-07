@@ -1,21 +1,13 @@
-import jwt, { type JwtPayload } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 
 import type { Request, Response, NextFunction } from 'express';
+import type {
+    AuthRequest,
+    DecodedToken,
+    HttpError,
+} from '../types/interfaces.js';
 
-interface HttpError extends Error {
-    statusCode?: number;
-}
-
-interface AuthRequest extends Request {
-    userId?: string;
-}
-
-interface DecodedToken extends JwtPayload {
-    email: string;
-    userId: string;
-}
-
-export default (req: AuthRequest, res: Response, next: NextFunction) => {
+export default (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.get('Authorization');
 
     if (!authHeader) {
@@ -48,6 +40,6 @@ export default (req: AuthRequest, res: Response, next: NextFunction) => {
         throw error;
     }
 
-    req.userId = decodedToken.userId;
+    (req as AuthRequest).userId = decodedToken.userId;
     next();
 };

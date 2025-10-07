@@ -67,16 +67,16 @@ export default class Post {
         newDescription: string
     ) {
         const posts = await this.getPosts();
-
+        // prettier-ignore
         const updatedPosts: Post[] = posts.map((post: Post) =>
             post.id === postId
                 ? new Post(
-                      newTitle,
-                      newDescription,
-                      post.authorId,
-                      post.dateCreated,
-                      post.id
-                  )
+                    newTitle,
+                    newDescription,
+                    post.authorId,
+                    post.dateCreated,
+                    post.id
+                )
                 : post
         );
 

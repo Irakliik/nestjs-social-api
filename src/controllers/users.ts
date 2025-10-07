@@ -1,52 +1,15 @@
 import { userEvent } from '../app.js';
 import Post from '../models/posts.js';
 import User from '../models/users.js';
+import type {
+    AuthRequest,
+    CreatePostRequestBody,
+    HttpError,
+    PutPostBody,
+    PutUserProfileRequestBody,
+} from '../types/interfaces.js';
 import logger from '../util.js';
-import type { Request, RequestHandler, Response } from 'express';
-
-interface HttpError extends Error {
-    statusCode?: number;
-}
-
-interface AuthRequest extends Request {
-    userId: string;
-}
-// interface PostActionRequest extends AuthRequest {
-//     params: {
-//         postId: string;
-//     };
-// }
-
-// interface AuthRequest<TParams = any> extends Request<TParams> {
-//     userId: string;
-// }
-
-interface PostActionRequest {
-    postId: string;
-}
-
-interface PutPostBody {
-    title: string;
-    description: string;
-}
-
-interface PutPostRequest extends PostActionRequest {
-    body: {
-        title: string;
-        description: string;
-    };
-}
-
-interface PutUserProfileRequestBody {
-    firstName: string;
-    lastName: string;
-    email: string;
-}
-
-interface CreatePostRequestBody {
-    title: string;
-    description: string;
-}
+import type { Request, Response } from 'express';
 
 const getUserProfile = (req: Request, res: Response) => {
     const userId = (req as AuthRequest).userId;
@@ -113,8 +76,7 @@ const postPost = (
 };
 
 const getPosts = async (req: Request, res: Response) => {
-    // const userId = (req as AuthRequest).userId;
-    const userId = (req as unknown as AuthRequest).userId;
+    const userId = (req as AuthRequest).userId;
 
     try {
         const user = await User.getUserById(userId);
