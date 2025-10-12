@@ -10,9 +10,13 @@ import { winstonConfig } from 'logger/winston.config';
 import { DatabaseModule } from './database/database.module';
 import { LikesModule } from './likes/likes.module';
 import { PostsModule } from './posts/posts.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     HealthModule,
     AuthModule,
     UsersModule,

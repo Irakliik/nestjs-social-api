@@ -15,19 +15,19 @@ export class User extends Model<User> {
   @Column(DataType.BIGINT.UNSIGNED)
   declare id: number;
 
-  @Column
   @AllowNull(false)
+  @Column
   firstName: string;
 
-  @Column
   @AllowNull(false)
+  @Column
   lastName: string;
 
-  @Column
   @AllowNull(false)
+  @Column
   email: string;
 
-  @Column
   @AllowNull(false)
+  @Column
   passwordHash: string;
 }
