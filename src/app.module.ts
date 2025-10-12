@@ -7,6 +7,9 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { WinstonModule } from 'nest-winston';
 import { winstonConfig } from 'logger/winston.config';
+import { DatabaseModule } from './database/database.module';
+import { LikesModule } from './likes/likes.module';
+import { PostsModule } from './posts/posts.module';
 
 @Module({
   imports: [
@@ -14,6 +17,9 @@ import { winstonConfig } from 'logger/winston.config';
     AuthModule,
     UsersModule,
     WinstonModule.forRoot(winstonConfig),
+    DatabaseModule,
+    LikesModule,
+    PostsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

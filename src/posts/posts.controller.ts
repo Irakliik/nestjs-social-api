@@ -14,7 +14,7 @@ import {
 import { JwtAuthGuard } from 'src/auth/auth.guards';
 import { GetUser } from 'src/auth/get-user.decorator';
 import type { JwtPayload } from 'src/auth/jwt-payload.interface';
-import type { CreatePostBody, UpdatePostBody } from './user.dtos';
+import type { CreatePostBody, UpdatePostBody } from './posts.dtos';
 import PostModel from 'src/models/posts';
 import User from 'src/models/users';
 import { Logger } from 'winston';

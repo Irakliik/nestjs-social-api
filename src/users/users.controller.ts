@@ -11,7 +11,7 @@ import { JwtAuthGuard } from 'src/auth/auth.guards';
 import { GetUser } from 'src/auth/get-user.decorator';
 import type { JwtPayload } from 'src/auth/jwt-payload.interface';
 import User from 'src/models/users';
-import { UpdateUserDto } from './user.dtos';
+import { UpdateUserDto } from './users.dtos';
 import { Logger } from 'winston';
 import * as winston from 'winston';
 import { winstonConfig } from 'logger/winston.config';
