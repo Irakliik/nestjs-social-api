@@ -6,3 +6,10 @@ export class UpdateUserDto {
   @IsNotEmpty()
   lastName: string;
 }
+
+export class CreateUserDto {
+  firstName: string;
+  lastName: string;
+  email: string;
+  passwordHash: string;
+}
