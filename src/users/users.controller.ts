@@ -18,14 +18,18 @@ import { winstonConfig } from 'logger/winston.config';
 
 import nodemailer from 'nodemailer';
 import sendgridTransports from 'nodemailer-sendgrid-transport';
+import { UsersService } from './users.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller('users')
 export class UsersController {
   private readonly logger: Logger;
   private nodemailer: nodemailer.Transporter;
-  constructor() {
+
+  constructor(private usersService: UsersService) {
     this.logger = winston.createLogger(winstonConfig);
+
+    // NODEMAILER
     this.nodemailer = nodemailer.createTransport(
       sendgridTransports({
         auth: {
@@ -33,13 +37,14 @@ export class UsersController {
         },
       }) as unknown as nodemailer.TransportOptions,
     );
+    // NODEMAILER --------------
   }
 
   @Get('/profile')
   async getUserProfile(@GetUser() userPayload: JwtPayload) {
     const userId = userPayload.userId;
 
-    const user = await User.getUserById(userId);
+    const user = await this.usersService.getUserById(userId);
 
     if (!user) {
       this.logger.error(`User with ID ${userId} not found`);
@@ -64,14 +69,22 @@ export class UsersController {
     const { userId } = userPayload;
 
     try {
-      await User.updateUser(userId, firstName, lastName);
+      const result = await this.usersService.updateUser(
+        userId,
+        firstName,
+        lastName,
+      );
+
+      if (!result.affected) {
+        throw new Error();
+      }
     } catch {
       this.logger.error('Failed to update user');
       throw new InternalServerErrorException('Failed to update user');
     }
 
-    const { email } = (await User.getUserById(userId)) as User;
-
+    const { email } = (await this.usersService.getUserById(userId)) as User;
+    // NODEMAILER
     try {
       await this.nodemailer.sendMail({
         to: email,
@@ -82,6 +95,7 @@ export class UsersController {
     } catch (err) {
       console.log(err);
     }
+    // ---------------
 
     this.logger.info('user updated successfully');
 

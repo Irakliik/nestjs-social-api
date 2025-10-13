@@ -7,7 +7,6 @@ import {
   SignInCredentialsDto,
   SignUpCredentialsDto,
 } from './auth-credentials.dto';
-import User from 'src/models/users';
 import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from './jwt-payload.interface';
