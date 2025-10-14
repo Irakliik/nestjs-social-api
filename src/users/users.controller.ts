@@ -10,8 +10,7 @@ import {
 import { JwtAuthGuard } from 'src/auth/auth.guards';
 import { GetUser } from 'src/auth/get-user.decorator';
 import type { JwtPayload } from 'src/auth/jwt-payload.interface';
-import User from 'src/models/users';
-import { UpdateUserDto } from './users.dtos';
+import { UpdateUserDto, UserPostWithLikes } from './users.dtos';
 import { Logger } from 'winston';
 import * as winston from 'winston';
 import { winstonConfig } from 'logger/winston.config';
@@ -83,11 +82,10 @@ export class UsersController {
       throw new InternalServerErrorException('Failed to update user');
     }
 
-    const { email } = (await this.usersService.getUserById(userId)) as User;
     // NODEMAILER
     try {
       await this.nodemailer.sendMail({
-        to: email,
+        to: userPayload.email,
         from: process.env.ORG_EMAIL,
         subject: 'Update Succeded!',
         html: '<h1>You successfully updated!</h1>',
@@ -100,5 +98,14 @@ export class UsersController {
     this.logger.info('user updated successfully');
 
     return { message: 'user updated successfully' };
+  }
+
+  @Get('/first-posts')
+  async getFirstPost(): Promise<UserPostWithLikes[]> {
+    const res = await this.usersService.getFirstPost();
+
+    this.logger.info('first posts of each user sent successfully');
+
+    return res;
   }
 }

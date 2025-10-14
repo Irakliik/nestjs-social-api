@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './user.entity';
 import { Repository } from 'typeorm';
-import { CreateUserDto } from './users.dtos';
+import { CreateUserDto, UserPostWithLikes } from './users.dtos';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private usersRepository: Repository<User>,
+    private dataSource: DataSource,
   ) {}
 
   getUsers(): Promise<User[]> {
@@ -51,5 +53,21 @@ export class UsersService {
     });
 
     return result;
+  }
+
+  async getFirstPost() {
+    const res: UserPostWithLikes[] = await this.dataSource
+      .query(`SELECT users.firstName, users.lastName, posts.title, posts.description, COUNT(likes.id) AS numLikes
+FROM users
+INNER JOIN posts ON users.id = posts.authorId
+LEFT JOIN likes ON likes.postId = posts.id
+WHERE posts.dateCreated = (
+    SELECT MIN(posts2.dateCreated)
+    FROM posts AS posts2
+    WHERE posts2.authorId = users.id
+)
+GROUP BY users.firstName, users.lastName, posts.title, posts.description;`);
+
+    return res;
   }
 }
