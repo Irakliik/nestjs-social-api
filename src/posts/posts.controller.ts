@@ -66,26 +66,7 @@ export class PostsController {
     @Param('postId') postId: string,
     @Body() updatedPost: UpdatePostBody,
   ) {
-    const post = await PostModel.getPostById(postId);
-    if (!post) {
-      this.logger.error(`Post with id ${postId} not found`);
-      throw new NotFoundException(`Post with id ${postId} not found`);
-    }
-
-    if (post.authorId !== userPayload.userId) {
-      this.logger.error('You do not have permission to update this post');
-      throw new ForbiddenException(
-        'You do not have permission to update this post',
-      );
-    }
-
-    const { title, description } = updatedPost;
-
-    await PostModel.updatePost(postId, title, description).catch(() => {
-      this.logger.error('Failed to update the post');
-
-      throw new InternalServerErrorException('Failed to update the post');
-    });
+    await this.postsService.updatePost(postId, userPayload.userId, updatedPost);
 
     this.logger.info('Post updated successfully');
     return { message: 'Post updated successfully' };

@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -7,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { PostModel } from './posts.entity';
 import { Not, Repository } from 'typeorm';
 import { User } from 'src/users/user.entity';
-import { CreatePostBody } from './posts.dtos';
+import { CreatePostBody, UpdatePostBody } from './posts.dtos';
 import winston, { Logger } from 'winston';
 import { winstonConfig } from 'logger/winston.config';
 
@@ -101,5 +102,42 @@ export class PostsService {
     });
 
     return mappedPosts;
+  }
+
+  async updatePost(
+    postId: string,
+    userId: string,
+    updatedPost: UpdatePostBody,
+  ) {
+    try {
+      const post = await this.postsRepository.findOne({
+        where: { id: postId },
+        relations: ['author'],
+      });
+      console.log(postId);
+
+      if (!post) {
+        this.logger.error(`Post with id ${postId} not found`);
+        throw new NotFoundException(`Post with id ${postId} not found`);
+      }
+
+      if (post.author.id !== userId) {
+        this.logger.error('You do not have permission to update this post');
+        throw new ForbiddenException(
+          'You do not have permission to update this post',
+        );
+      }
+
+      const { title, description } = updatedPost;
+
+      const res = await this.postsRepository.update(
+        { id: postId },
+        { title, description },
+      );
+
+      return res;
+    } catch {
+      throw new InternalServerErrorException('Failed to update the post');
+    }
   }
 }
