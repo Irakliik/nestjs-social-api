@@ -20,12 +20,13 @@ import User from 'src/models/users';
 import { Logger } from 'winston';
 import * as winston from 'winston';
 import { winstonConfig } from 'logger/winston.config';
+import { PostsService } from './posts.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller('users/posts')
 export class PostsController {
   private readonly logger: Logger;
-  constructor() {
+  constructor(private postsService: PostsService) {
     this.logger = winston.createLogger(winstonConfig);
   }
 
@@ -88,18 +89,7 @@ export class PostsController {
     @GetUser() user: JwtPayload,
     @Body() createPostBody: CreatePostBody,
   ) {
-    const userId = user.userId;
-
-    const { title, description } = createPostBody;
-
-    const newPost = new PostModel(title, description, userId);
-
-    try {
-      await PostModel.addPost(newPost);
-    } catch {
-      this.logger.error('Failed to add a post');
-      throw new InternalServerErrorException('Failed to add a post');
-    }
+    await this.postsService.addPost(user.userId, createPostBody);
 
     this.logger.info('Post added successfully');
     return { message: 'Post added successfully' };

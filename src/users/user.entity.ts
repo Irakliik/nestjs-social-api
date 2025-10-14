@@ -1,5 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
-
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import { PostModel } from 'src/posts/posts.entity';
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -16,4 +16,7 @@ export class User {
 
   @Column()
   passwordHash: string;
+
+  @OneToMany(() => PostModel, (post) => post.author)
+  posts: PostModel[];
 }
