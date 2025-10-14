@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PostModel } from './posts.entity';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { User } from 'src/users/user.entity';
 import { CreatePostBody } from './posts.dtos';
 import winston, { Logger } from 'winston';
@@ -57,10 +57,10 @@ export class PostsService {
       console.log(postsArr);
 
       const posts = postsArr.map((post) => {
-        const { title, description, dateCreated } = post;
+        const { title, description, dateCreated, id } = post;
         const authorName = user.firstName + ' ' + user.lastName;
 
-        return { title, description, dateCreated, authorName };
+        return { title, description, dateCreated, authorName, postId: id };
       });
 
       return posts;
@@ -69,5 +69,37 @@ export class PostsService {
 
       throw new InternalServerErrorException('failed to fetch posts');
     }
+  }
+
+  async getFeed(userId: string) {
+    const posts = await this.postsRepository.find({
+      where: {
+        author: {
+          id: Not(userId),
+        },
+      },
+      relations: ['author'],
+      order: { dateCreated: 'DESC' },
+    });
+
+    const mappedPosts = posts.map((post: PostModel) => {
+      const {
+        title,
+        description,
+        dateCreated,
+        id: postId,
+        author: { firstName, lastName },
+      } = post;
+
+      return {
+        title,
+        description,
+        dateCreated,
+        postId,
+        authroName: firstName + ' ' + lastName,
+      };
+    });
+
+    return mappedPosts;
   }
 }

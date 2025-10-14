@@ -1,5 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  OneToMany,
+  BeforeInsert,
+} from 'typeorm';
 import { PostModel } from 'src/posts/posts.entity';
+import * as bcrypt from 'bcrypt';
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -19,4 +26,9 @@ export class User {
 
   @OneToMany(() => PostModel, (post) => post.author)
   posts: PostModel[];
+
+  @BeforeInsert()
+  async hashPassword() {
+    this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
+  }
 }

@@ -16,7 +16,6 @@ import { GetUser } from 'src/auth/get-user.decorator';
 import type { JwtPayload } from 'src/auth/jwt-payload.interface';
 import type { CreatePostBody, UpdatePostBody } from './posts.dtos';
 import PostModel from 'src/models/posts';
-import User from 'src/models/users';
 import { Logger } from 'winston';
 import * as winston from 'winston';
 import { winstonConfig } from 'logger/winston.config';
@@ -33,27 +32,7 @@ export class PostsController {
   @Get('/feed')
   async getFeed(@GetUser() userPayload: JwtPayload) {
     const userId = userPayload.userId;
-    const postsArr = await PostModel.getPosts();
-    const filderedPostsArr = postsArr.filter(
-      (post: PostModel) => post.authorId !== userId,
-    );
-
-    const posts = await Promise.all(
-      filderedPostsArr.map(async (post: PostModel) => {
-        const { title, description, dateCreated, authorId, id } = post;
-
-        const author = await User.getUserById(authorId);
-
-        if (!author) {
-          this.logger.error(`Author with id ${authorId} not found`);
-
-          throw new NotFoundException(`Author with id ${authorId} not found`);
-        }
-
-        const authorName = author.firstName + ' ' + author.lastName;
-        return { title, description, dateCreated, authorName, postId: id };
-      }),
-    );
+    const posts = this.postsService.getFeed(userId);
 
     this.logger.info('Sent posts successfully');
     return posts;

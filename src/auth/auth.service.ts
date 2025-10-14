@@ -34,8 +34,7 @@ export class AuthService {
       this.logger.error('User with this email already exists');
       throw new ConflictException('User with this email already exists');
     }
-    const hash = await bcrypt.hash(password, 12);
-    const newUser = { firstName, lastName, email, passwordHash: hash };
+    const newUser = { firstName, lastName, email, password };
     await this.usersService.addUser(newUser);
 
     this.logger.info('User created successfully');
