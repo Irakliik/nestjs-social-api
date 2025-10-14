@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PostModel } from './posts.entity';
 import { Repository } from 'typeorm';
@@ -39,12 +43,31 @@ export class PostsService {
   }
 
   async getPosts(userId: string) {
-    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['posts'],
+    });
     if (!user) {
       this.logger.error('User not found');
       throw new NotFoundException('User not found');
     }
 
-    return user.posts;
+    try {
+      const postsArr = user.posts;
+      console.log(postsArr);
+
+      const posts = postsArr.map((post) => {
+        const { title, description, dateCreated } = post;
+        const authorName = user.firstName + ' ' + user.lastName;
+
+        return { title, description, dateCreated, authorName };
+      });
+
+      return posts;
+    } catch {
+      this.logger.error('failed to fetch posts');
+
+      throw new InternalServerErrorException('failed to fetch posts');
+    }
   }
 }

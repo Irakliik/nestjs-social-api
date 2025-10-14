@@ -63,23 +63,9 @@ export class PostsController {
   async getPosts(@GetUser() userPayload: JwtPayload) {
     const userId = userPayload.userId;
 
-    const user = await User.getUserById(userId);
-    if (!user) {
-      this.logger.error(`user with ID ${userId} not found`);
-      throw new InternalServerErrorException(
-        `user with ID ${userId} not found`,
-      );
-    }
+    const posts = await this.postsService.getPosts(userId);
 
-    const postsArr = await PostModel.getPostsByAuthorId(userId);
-
-    const posts = postsArr.map((post) => {
-      const { title, description, dateCreated } = post;
-      const authorName = user.firstName + ' ' + user.lastName;
-
-      this.logger.info('Sent post successfully');
-      return { title, description, dateCreated, authorName };
-    });
+    this.logger.info('Posts Sent successfully');
 
     return posts;
   }
