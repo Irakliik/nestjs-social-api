@@ -7,7 +7,6 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { WinstonModule } from 'nest-winston';
 import { winstonConfig } from 'logger/winston.config';
-import { DatabaseModule } from './database/database.module';
 import { LikesModule } from './likes/likes.module';
 import { PostsModule } from './posts/posts.module';
 import { ConfigModule } from '@nestjs/config';
@@ -23,7 +22,6 @@ import { dataSourceOptions } from 'db/data-source';
     AuthModule,
     UsersModule,
     WinstonModule.forRoot(winstonConfig),
-    DatabaseModule,
     LikesModule,
     PostsModule,
     TypeOrmModule.forRoot(dataSourceOptions),
