@@ -114,7 +114,6 @@ export class PostsService {
         where: { id: postId },
         relations: ['author'],
       });
-      console.log(postId);
 
       if (!post) {
         this.logger.error(`Post with id ${postId} not found`);
@@ -138,6 +137,33 @@ export class PostsService {
       return res;
     } catch {
       throw new InternalServerErrorException('Failed to update the post');
+    }
+  }
+
+  async deletePost(postId: string, userId: string) {
+    try {
+      const post = await this.postsRepository.findOne({
+        where: { id: postId },
+        relations: ['author'],
+      });
+
+      if (!post) {
+        this.logger.error(`Post with id ${postId} not found`);
+        throw new NotFoundException(`Post with id ${postId} not found`);
+      }
+
+      if (post.author.id !== userId) {
+        this.logger.error('You do not have permission to delete this post');
+        throw new ForbiddenException(
+          'You do not have permission to delete this post',
+        );
+      }
+
+      const res = await this.postsRepository.delete({ id: postId });
+
+      return res;
+    } catch {
+      throw new InternalServerErrorException('Failed to delete the post');
     }
   }
 }
