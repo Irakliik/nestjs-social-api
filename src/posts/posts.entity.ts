@@ -1,3 +1,4 @@
+import { Like } from 'src/likes/likes.entity';
 import { User } from 'src/users/user.entity';
 import {
   Entity,
@@ -5,6 +6,7 @@ import {
   Column,
   CreateDateColumn,
   ManyToOne,
+  OneToMany,
 } from 'typeorm';
 
 @Entity('posts')
@@ -23,4 +25,7 @@ export class PostModel {
 
   @ManyToOne(() => User, (user) => user.posts)
   author: User;
+
+  @OneToMany(() => Like, (like) => like.post)
+  likes: Like[];
 }

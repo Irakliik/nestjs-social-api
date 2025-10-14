@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { PostModel } from 'src/posts/posts.entity';
 import * as bcrypt from 'bcrypt';
+import { Like } from 'src/likes/likes.entity';
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -26,6 +27,9 @@ export class User {
 
   @OneToMany(() => PostModel, (post) => post.author)
   posts: PostModel[];
+
+  @OneToMany(() => Like, (like) => like.user)
+  likes: Like[];
 
   @BeforeInsert()
   async hashPassword() {
