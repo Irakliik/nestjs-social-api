@@ -11,6 +11,8 @@ import { DatabaseModule } from './database/database.module';
 import { LikesModule } from './likes/likes.module';
 import { PostsModule } from './posts/posts.module';
 import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { dataSourceOptions } from 'db/data-source';
 
 @Module({
   imports: [
@@ -24,6 +26,7 @@ import { ConfigModule } from '@nestjs/config';
     DatabaseModule,
     LikesModule,
     PostsModule,
+    TypeOrmModule.forRoot(dataSourceOptions),
   ],
   controllers: [AppController],
   providers: [AppService],

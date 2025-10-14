@@ -1,33 +1,38 @@
 import {
-  Table,
+  Entity,
+  PrimaryGeneratedColumn,
   Column,
-  Model,
-  PrimaryKey,
-  AutoIncrement,
-  AllowNull,
-  DataType,
-} from 'sequelize-typescript';
+  OneToMany,
+  BeforeInsert,
+} from 'typeorm';
+import { PostModel } from 'src/posts/posts.entity';
+import * as bcrypt from 'bcrypt';
+import { Like } from 'src/likes/likes.entity';
+@Entity('users')
+export class User {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-@Table({ tableName: 'users', timestamps: false })
-export class User extends Model<User> {
-  @PrimaryKey
-  @AutoIncrement
-  @Column(DataType.BIGINT.UNSIGNED)
-  declare id: number;
-
-  @AllowNull(false)
-  @Column
+  @Column({ length: 100 })
   firstName: string;
 
-  @AllowNull(false)
-  @Column
+  @Column({ length: 100 })
   lastName: string;
 
-  @AllowNull(false)
-  @Column
+  @Column({ unique: true })
   email: string;
 
-  @AllowNull(false)
-  @Column
+  @Column()
   passwordHash: string;
+
+  @OneToMany(() => PostModel, (post) => post.author)
+  posts: PostModel[];
+
+  @OneToMany(() => Like, (like) => like.user)
+  likes: Like[];
+
+  @BeforeInsert()
+  async hashPassword() {
+    this.passwordHash = await bcrypt.hash(this.passwordHash, 12);
+  }
 }
