@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PostModel } from './posts.entity';
-import { Not, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { User } from 'src/users/user.entity';
 import { CreatePostBody, UpdatePostBody } from './posts.dtos';
 import winston, { Logger } from 'winston';
@@ -72,18 +72,18 @@ export class PostsService {
     }
   }
 
-  async getFeed(userId: string) {
-    const posts = await this.postsRepository.find({
-      where: {
-        author: {
-          id: Not(userId),
-        },
-      },
-      relations: ['author'],
-      order: { dateCreated: 'DESC' },
-    });
+  async getFeed(
+    userId: string,
+    page = 1,
+    limit = 10,
+    order: 'ASC' | 'DESC' = 'ASC',
+  ) {
+    const pagRes = await this.getPaginatedPosts(page, limit, order);
 
-    const mappedPosts = posts.map((post: PostModel) => {
+    const { total, totalPages, next, previous, data } = pagRes;
+    console.log(data);
+
+    const mappedPosts = data.map((post: PostModel) => {
       const {
         title,
         description,
@@ -92,16 +92,25 @@ export class PostsService {
         author: { firstName, lastName },
       } = post;
 
-      return {
+      const res = {
         title,
         description,
         dateCreated,
         postId,
         authroName: firstName + ' ' + lastName,
       };
+
+      return res;
     });
 
-    return mappedPosts;
+    const result = {
+      total,
+      totalPages,
+      next,
+      previous,
+      data: mappedPosts,
+    };
+    return result;
   }
 
   async updatePost(
@@ -165,5 +174,30 @@ export class PostsService {
     } catch {
       throw new InternalServerErrorException('Failed to delete the post');
     }
+  }
+
+  async getPaginatedPosts(page = 1, limit = 10, order: 'ASC' | 'DESC' = 'ASC') {
+    const [posts, total] = await this.postsRepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { dateCreated: order },
+    });
+
+    const totalPages = Math.ceil(total / limit);
+
+    const nextPage = page < totalPages ? page + 1 : null;
+    const previousPage = page > 1 ? page - 1 : null;
+
+    const pagination = {
+      total,
+      limit,
+      page,
+      totalPages,
+      next: nextPage,
+      previous: previousPage,
+      data: posts,
+    };
+
+    return pagination;
   }
 }

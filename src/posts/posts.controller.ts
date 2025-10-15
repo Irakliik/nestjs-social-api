@@ -6,12 +6,17 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/auth.guards';
 import { GetUser } from 'src/auth/get-user.decorator';
 import type { JwtPayload } from 'src/auth/jwt-payload.interface';
-import type { CreatePostBody, UpdatePostBody } from './posts.dtos';
+import type {
+  CreatePostBody,
+  FeedReqQuery,
+  UpdatePostBody,
+} from './posts.dtos';
 import { Logger } from 'winston';
 import * as winston from 'winston';
 import { winstonConfig } from 'logger/winston.config';
@@ -26,9 +31,21 @@ export class PostsController {
   }
 
   @Get('/feed')
-  async getFeed(@GetUser() userPayload: JwtPayload) {
+  async getFeed(
+    @GetUser() userPayload: JwtPayload,
+    @Query() query: FeedReqQuery,
+  ) {
     const userId = userPayload.userId;
-    const posts = this.postsService.getFeed(userId);
+
+    const { page, limit, order } = query;
+    console.log(query);
+
+    const posts = this.postsService.getFeed(
+      userId,
+      parseInt(page),
+      parseInt(limit),
+      order,
+    );
 
     this.logger.info('Sent posts successfully');
     return posts;

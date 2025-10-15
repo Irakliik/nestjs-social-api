@@ -13,3 +13,9 @@ export class UpdatePostBody {
   @IsNotEmpty()
   description: string;
 }
+
+export interface FeedReqQuery {
+  page: string;
+  limit: string;
+  order: 'ASC' | 'DESC';
+}
