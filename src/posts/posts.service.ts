@@ -43,7 +43,12 @@ export class PostsService {
     return res;
   }
 
-  async getPosts(userId: string) {
+  async getPosts(
+    userId: string,
+    page = 1,
+    limit = 10,
+    order: 'ASC' | 'DESC' = 'ASC',
+  ) {
     const user = await this.usersRepository.findOne({
       where: { id: userId },
       relations: ['posts'],
@@ -54,17 +59,16 @@ export class PostsService {
     }
 
     try {
-      const postsArr = user.posts;
-      console.log(postsArr);
+      const pagRes = await this.getPaginatedPosts(userId, page, limit, order);
 
-      const posts = postsArr.map((post) => {
+      const posts = pagRes.data.map((post) => {
         const { title, description, dateCreated, id } = post;
         const authorName = user.firstName + ' ' + user.lastName;
 
         return { title, description, dateCreated, authorName, postId: id };
       });
 
-      return posts;
+      return { ...pagRes, data: posts };
     } catch {
       this.logger.error('failed to fetch posts');
 
@@ -78,12 +82,9 @@ export class PostsService {
     limit = 10,
     order: 'ASC' | 'DESC' = 'ASC',
   ) {
-    const pagRes = await this.getPaginatedPosts(page, limit, order);
+    const pagRes = await this.getPaginatedPosts(null, page, limit, order);
 
-    const { total, totalPages, next, previous, data } = pagRes;
-    console.log(data);
-
-    const mappedPosts = data.map((post: PostModel) => {
+    const mappedPosts = pagRes.data.map((post: PostModel) => {
       const {
         title,
         description,
@@ -103,14 +104,7 @@ export class PostsService {
       return res;
     });
 
-    const result = {
-      total,
-      totalPages,
-      next,
-      previous,
-      data: mappedPosts,
-    };
-    return result;
+    return { ...pagRes, data: mappedPosts };
   }
 
   async updatePost(
@@ -176,11 +170,17 @@ export class PostsService {
     }
   }
 
-  async getPaginatedPosts(page = 1, limit = 10, order: 'ASC' | 'DESC' = 'ASC') {
+  async getPaginatedPosts(
+    userId: string | null,
+    page = 1,
+    limit = 10,
+    order: 'ASC' | 'DESC' = 'ASC',
+  ) {
     const [posts, total] = await this.postsRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
       order: { dateCreated: order },
+      relations: ['author'],
     });
 
     const totalPages = Math.ceil(total / limit);
