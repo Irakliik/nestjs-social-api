@@ -102,7 +102,7 @@ export class UsersController {
 
   @Get('/first-posts')
   async getFirstPost(): Promise<UserPostWithLikes[]> {
-    const res = await this.usersService.getFirstPost();
+    const res = await this.usersService.getPaginatedFirstPosts();
 
     this.logger.info('first posts of each user sent successfully');
 

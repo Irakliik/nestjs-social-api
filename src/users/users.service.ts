@@ -55,7 +55,15 @@ export class UsersService {
     return result;
   }
 
-  async getFirstPost() {
+  async getPaginatedFirstPosts(
+    page = 1,
+    limit = 5,
+    order: 'ASC' | 'DESC' = 'ASC',
+  ) {
+    page = 2;
+    limit = 5;
+    const offset = (page - 1) * limit;
+
     const res: UserPostWithLikes[] = await this.dataSource
       .query(`SELECT users.firstName, users.lastName, posts.title, posts.description, COUNT(likes.id) AS numLikes
 FROM users
@@ -67,6 +75,17 @@ WHERE posts.dateCreated = (
     WHERE posts2.authorId = users.id
 )
 GROUP BY users.firstName, users.lastName, posts.title, posts.description;`);
+
+    const total: number = await this.dataSource.query(`SELECT 
+ COUNT(*) 
+FROM users
+INNER JOIN posts 
+  ON users.id = posts.authorId
+WHERE posts.dateCreated = (
+  SELECT MIN(posts.dateCreated)
+  FROM posts
+  WHERE posts.authorId = users.id
+);`);
 
     return res;
   }
