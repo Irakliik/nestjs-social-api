@@ -35,13 +35,12 @@ export class PostsController {
     @GetUser() userPayload: JwtPayload,
     @Query() query: FeedReqQuery,
   ) {
-    const userId = userPayload.userId;
+    // const userId = userPayload.userId;
 
     const { page, limit, order } = query;
     console.log(query);
 
     const posts = this.postsService.getFeed(
-      userId,
       parseInt(page),
       parseInt(limit),
       order,
@@ -52,10 +51,19 @@ export class PostsController {
   }
 
   @Get()
-  async getPosts(@GetUser() userPayload: JwtPayload) {
+  async getPosts(
+    @GetUser() userPayload: JwtPayload,
+    @Query() query: FeedReqQuery,
+  ) {
     const userId = userPayload.userId;
+    const { page, limit, order } = query;
 
-    const posts = await this.postsService.getPosts(userId);
+    const posts = await this.postsService.getPosts(
+      userId,
+      parseInt(page),
+      parseInt(limit),
+      order,
+    );
 
     this.logger.info('Posts Sent successfully');
 

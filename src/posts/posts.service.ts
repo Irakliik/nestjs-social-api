@@ -51,7 +51,6 @@ export class PostsService {
   ) {
     const user = await this.usersRepository.findOne({
       where: { id: userId },
-      relations: ['posts'],
     });
     if (!user) {
       this.logger.error('User not found');
@@ -76,12 +75,7 @@ export class PostsService {
     }
   }
 
-  async getFeed(
-    userId: string,
-    page = 1,
-    limit = 10,
-    order: 'ASC' | 'DESC' = 'ASC',
-  ) {
+  async getFeed(page = 1, limit = 10, order: 'ASC' | 'DESC' = 'ASC') {
     const pagRes = await this.getPaginatedPosts(null, page, limit, order);
 
     const mappedPosts = pagRes.data.map((post: PostModel) => {
@@ -181,6 +175,8 @@ export class PostsService {
       take: limit,
       order: { dateCreated: order },
       relations: ['author'],
+
+      ...(userId && { where: { author: { id: userId } } }),
     });
 
     const totalPages = Math.ceil(total / limit);
