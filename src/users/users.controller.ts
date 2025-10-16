@@ -5,12 +5,14 @@ import {
   InternalServerErrorException,
   NotFoundException,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/auth.guards';
 import { GetUser } from 'src/auth/get-user.decorator';
 import type { JwtPayload } from 'src/auth/jwt-payload.interface';
-import { UpdateUserDto, UserPostWithLikes } from './users.dtos';
+import { UpdateUserDto } from './users.dtos';
+import type { FirstPostsReqQuery } from './users.dtos';
 import { Logger } from 'winston';
 import * as winston from 'winston';
 import { winstonConfig } from 'logger/winston.config';
@@ -101,8 +103,15 @@ export class UsersController {
   }
 
   @Get('/first-posts')
-  async getFirstPost(): Promise<UserPostWithLikes[]> {
-    const res = await this.usersService.getPaginatedFirstPosts();
+  async getFirstPost(@Query() query: FirstPostsReqQuery) {
+    const { page, limit, order, filter } = query;
+
+    const res = await this.usersService.getPaginatedFirstPosts(
+      parseInt(page),
+      parseInt(limit),
+      order,
+      filter,
+    );
 
     this.logger.info('first posts of each user sent successfully');
 

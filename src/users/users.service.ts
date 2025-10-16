@@ -59,13 +59,18 @@ export class UsersService {
     page = 1,
     limit = 5,
     order: 'ASC' | 'DESC' = 'ASC',
+    filter?: string,
   ) {
-    page = 2;
-    limit = 5;
     const offset = (page - 1) * limit;
 
-    const res: UserPostWithLikes[] = await this.dataSource
-      .query(`SELECT users.firstName, users.lastName, posts.title, posts.description, COUNT(likes.id) AS numLikes
+    const keyword = `%${filter}%`;
+
+    const fitleringPart = filter
+      ? 'HAVING CONCAT(firstName, lastName, title, description) LIKE ?'
+      : '';
+
+    const res: UserPostWithLikes[] = await this.dataSource.query(
+      `SELECT users.firstName, users.lastName, posts.title, posts.description, COUNT(likes.id) AS numLikes
 FROM users
 INNER JOIN posts ON users.id = posts.authorId
 LEFT JOIN likes ON likes.postId = posts.id
@@ -74,10 +79,14 @@ WHERE posts.dateCreated = (
     FROM posts AS posts2
     WHERE posts2.authorId = users.id
 )
-GROUP BY users.firstName, users.lastName, posts.title, posts.description;`);
+GROUP BY users.firstName, users.lastName, posts.title, posts.description, posts.dateCreated ${fitleringPart} ORDER BY posts.dateCreated 
+${order === 'ASC' ? 'ASC' : 'DESC'} LIMIT ? OFFSET ? 
+;`,
+      filter ? [keyword, limit, offset] : [limit, offset],
+    );
 
-    const total: number = await this.dataSource.query(`SELECT 
- COUNT(*) 
+    const total: { total: number }[] = await this.dataSource.query(`SELECT 
+ COUNT(*) AS total 
 FROM users
 INNER JOIN posts 
   ON users.id = posts.authorId
@@ -87,6 +96,21 @@ WHERE posts.dateCreated = (
   WHERE posts.authorId = users.id
 );`);
 
-    return res;
+    const totalPages = Math.ceil(+total[0].total / limit);
+
+    const nextPage = page < totalPages ? page + 1 : null;
+    const previousPage = page > 1 ? page - 1 : null;
+
+    const pagination = {
+      total: +total[0].total,
+      limit,
+      page,
+      totalPages,
+      next: nextPage,
+      previous: previousPage,
+      data: res,
+    };
+
+    return pagination;
   }
 }

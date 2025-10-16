@@ -21,3 +21,10 @@ export interface UserPostWithLikes {
   description: string;
   numLikes: number;
 }
+
+export interface FirstPostsReqQuery {
+  page: string;
+  limit: string;
+  order: 'ASC' | 'DESC';
+  filter: string | undefined;
+}

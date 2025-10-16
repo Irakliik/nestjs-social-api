@@ -232,14 +232,15 @@ export class PostsService {
     filter: string | undefined,
   ) {
     const keyword = `%${filter}%`;
-    const condition = [
-      { title: Like(keyword) },
-      { description: Like(keyword) },
-      { author: { firstName: Like(keyword) } },
-      { author: { lastName: Like(keyword) } },
-    ];
+    const condition = filter
+      ? [
+          { title: Like(keyword) },
+          { description: Like(keyword) },
+          { author: { firstName: Like(keyword) } },
+          { author: { lastName: Like(keyword) } },
+        ]
+      : [];
 
-    console.log(filter);
     const [posts, total] = await this.postsRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
@@ -247,6 +248,8 @@ export class PostsService {
       relations: ['author'],
       ...(filter && { where: condition }),
     });
+
+    console.log(posts);
 
     const totalPages = Math.ceil(total / limit);
 
