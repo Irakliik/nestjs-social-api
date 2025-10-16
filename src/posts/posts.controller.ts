@@ -12,15 +12,30 @@ import {
 import { JwtAuthGuard } from 'src/auth/auth.guards';
 import { GetUser } from 'src/auth/get-user.decorator';
 import type { JwtPayload } from 'src/auth/jwt-payload.interface';
-import type {
-  CreatePostBody,
-  FeedReqQuery,
-  UpdatePostBody,
-} from './posts.dtos';
+import { CreatePostBody, FeedReqQuery, UpdatePostBody } from './posts.dtos';
 import { Logger } from 'winston';
 import * as winston from 'winston';
 import { winstonConfig } from 'logger/winston.config';
 import { PostsService } from './posts.service';
+import {
+  ApiBody,
+  ApiForbiddenResponse,
+  ApiInternalServerErrorResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiParam,
+  ApiQuery,
+} from '@nestjs/swagger';
+import {
+  DeleteForbiddenResponse,
+  PaginatedPostsResponse,
+  PostNotFoundResponse,
+  UpdateForbiddenResponse,
+} from './posts-response.dto';
+import {
+  InternalServerErrorResponse,
+  NotFoundResponse,
+} from 'src/users/users-respnse.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('users/posts')
@@ -30,6 +45,34 @@ export class PostsController {
     this.logger = winston.createLogger(winstonConfig);
   }
 
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    example: '1',
+    description: 'Page number',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    example: '5',
+    description: 'Posts per page',
+  })
+  @ApiQuery({
+    name: 'order',
+    required: false,
+    example: 'ASC',
+    description: 'Sort order (ASC or DESC)',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    example: 'john',
+    description: 'Filter posts by keyword',
+  })
+  @ApiOkResponse({
+    description: 'Sent posts successfully',
+    type: PaginatedPostsResponse,
+  })
   @Get('/feed')
   async getFeed(
     @GetUser() userPayload: JwtPayload,
@@ -50,6 +93,42 @@ export class PostsController {
     return posts;
   }
 
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    example: '1',
+    description: 'Page number',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    example: '5',
+    description: 'Posts per page',
+  })
+  @ApiQuery({
+    name: 'order',
+    required: false,
+    example: 'ASC',
+    description: 'Sort order (ASC or DESC)',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    example: 'john',
+    description: 'Filter posts by keyword',
+  })
+  @ApiOkResponse({
+    description: 'Sent posts successfully',
+    type: PaginatedPostsResponse,
+  })
+  @ApiNotFoundResponse({
+    description: 'User not found',
+    type: NotFoundResponse,
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'failed to fetch posts',
+    type: InternalServerErrorResponse,
+  })
   @Get()
   async getPosts(
     @GetUser() userPayload: JwtPayload,
@@ -71,6 +150,19 @@ export class PostsController {
     return posts;
   }
 
+  @ApiBody({ type: CreatePostBody })
+  @ApiNotFoundResponse({
+    description: 'User not found',
+    type: NotFoundResponse,
+  })
+  @ApiOkResponse({
+    description: 'Post added successfully',
+    schema: {
+      example: {
+        message: 'Post added successfully',
+      },
+    },
+  })
   @Post()
   async createPost(
     @GetUser() user: JwtPayload,
@@ -83,6 +175,28 @@ export class PostsController {
   }
 
   @Put('/:postId')
+  @ApiBody({ type: UpdatePostBody })
+  @ApiParam({
+    name: 'postId',
+    description: 'ID of the post',
+    example: '123abc',
+  })
+  @ApiOkResponse({
+    description: 'Post updated successfully',
+    schema: {
+      example: {
+        message: 'Post updated successfully',
+      },
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'User not found',
+    type: PostNotFoundResponse,
+  })
+  @ApiForbiddenResponse({
+    description: 'You do not have permission to update this post',
+    type: UpdateForbiddenResponse,
+  })
   async updatePost(
     @GetUser() userPayload: JwtPayload,
     @Param('postId') postId: string,
@@ -94,6 +208,27 @@ export class PostsController {
     return { message: 'Post updated successfully' };
   }
 
+  @ApiNotFoundResponse({
+    description: 'User not found',
+    type: PostNotFoundResponse,
+  })
+  @ApiParam({
+    name: 'postId',
+    description: 'ID of the post',
+    example: '123abc',
+  })
+  @ApiOkResponse({
+    description: 'Post deleted successfully',
+    schema: {
+      example: {
+        message: 'Post deleted successfully',
+      },
+    },
+  })
+  @ApiForbiddenResponse({
+    description: 'You do not have permission to delete this post',
+    type: DeleteForbiddenResponse,
+  })
   @Delete('/:postId')
   async deletePost(
     @GetUser() userPayload: JwtPayload,
