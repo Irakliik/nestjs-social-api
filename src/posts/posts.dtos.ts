@@ -18,4 +18,5 @@ export interface FeedReqQuery {
   page: string;
   limit: string;
   order: 'ASC' | 'DESC';
+  filter: string | undefined;
 }

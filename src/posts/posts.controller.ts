@@ -56,13 +56,14 @@ export class PostsController {
     @Query() query: FeedReqQuery,
   ) {
     const userId = userPayload.userId;
-    const { page, limit, order } = query;
+    const { page, limit, order, filter } = query;
 
     const posts = await this.postsService.getPosts(
       userId,
       parseInt(page),
       parseInt(limit),
       order,
+      filter,
     );
 
     this.logger.info('Posts Sent successfully');

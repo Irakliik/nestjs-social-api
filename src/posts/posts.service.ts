@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PostModel } from './posts.entity';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { User } from 'src/users/user.entity';
 import { CreatePostBody, UpdatePostBody } from './posts.dtos';
 import winston, { Logger } from 'winston';
@@ -48,6 +48,7 @@ export class PostsService {
     page = 1,
     limit = 10,
     order: 'ASC' | 'DESC' = 'ASC',
+    filter?: string,
   ) {
     const user = await this.usersRepository.findOne({
       where: { id: userId },
@@ -58,11 +59,23 @@ export class PostsService {
     }
 
     try {
-      const pagRes = await this.getPaginatedPosts(userId, page, limit, order);
+      const pagRes = await this.getPaginatedPostsUser(
+        userId,
+        page,
+        limit,
+        order,
+        filter,
+      );
 
       const posts = pagRes.data.map((post) => {
-        const { title, description, dateCreated, id } = post;
-        const authorName = user.firstName + ' ' + user.lastName;
+        const {
+          title,
+          description,
+          dateCreated,
+          id,
+          author: { firstName, lastName },
+        } = post;
+        const authorName = firstName + ' ' + lastName;
 
         return { title, description, dateCreated, authorName, postId: id };
       });
@@ -75,8 +88,13 @@ export class PostsService {
     }
   }
 
-  async getFeed(page = 1, limit = 10, order: 'ASC' | 'DESC' = 'ASC') {
-    const pagRes = await this.getPaginatedPosts(null, page, limit, order);
+  async getFeed(
+    page = 1,
+    limit = 10,
+    order: 'ASC' | 'DESC' = 'ASC',
+    filter = undefined,
+  ) {
+    const pagRes = await this.getPaginatedPostsFeed(page, limit, order, filter);
 
     const mappedPosts = pagRes.data.map((post: PostModel) => {
       const {
@@ -164,19 +182,69 @@ export class PostsService {
     }
   }
 
-  async getPaginatedPosts(
-    userId: string | null,
+  async getPaginatedPostsUser(
+    userId: string,
     page = 1,
     limit = 10,
     order: 'ASC' | 'DESC' = 'ASC',
+    filter: string | undefined,
   ) {
+    const keyword = `%${filter}%`;
+    const condition = filter
+      ? [
+          { author: { id: userId }, title: Like(keyword) },
+          { author: { id: userId }, description: Like(keyword) },
+          { author: { id: userId, firstName: Like(keyword) } },
+          { author: { id: userId, lastName: Like(keyword) } },
+        ]
+      : { author: { id: userId } };
+
     const [posts, total] = await this.postsRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
       order: { dateCreated: order },
       relations: ['author'],
+      where: condition,
+    });
 
-      ...(userId && { where: { author: { id: userId } } }),
+    const totalPages = Math.ceil(total / limit);
+
+    const nextPage = page < totalPages ? page + 1 : null;
+    const previousPage = page > 1 ? page - 1 : null;
+
+    const pagination = {
+      total,
+      limit,
+      page,
+      totalPages,
+      next: nextPage,
+      previous: previousPage,
+      data: posts,
+    };
+
+    return pagination;
+  }
+
+  async getPaginatedPostsFeed(
+    page = 1,
+    limit = 10,
+    order: 'ASC' | 'DESC' = 'ASC',
+    filter: string | undefined,
+  ) {
+    const keyword = `%${filter}%`;
+    const condition = [
+      { title: Like(keyword) },
+      { description: Like(keyword) },
+      { author: { firstName: Like(keyword) } },
+      { author: { lastName: Like(keyword) } },
+    ];
+
+    const [posts, total] = await this.postsRepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { dateCreated: order },
+      relations: ['author'],
+      ...(filter && { where: condition }),
     });
 
     const totalPages = Math.ceil(total / limit);
