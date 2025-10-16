@@ -61,6 +61,8 @@ export class UsersService {
     order: 'ASC' | 'DESC' = 'ASC',
     filter?: string,
   ) {
+    if (filter) page = 1;
+
     const offset = (page - 1) * limit;
 
     const keyword = `%${filter}%`;
