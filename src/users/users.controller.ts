@@ -20,6 +20,17 @@ import { winstonConfig } from 'logger/winston.config';
 import nodemailer from 'nodemailer';
 import sendgridTransports from 'nodemailer-sendgrid-transport';
 import { UsersService } from './users.service';
+import {
+  ApiOkResponse,
+  ApiNotFoundResponse,
+  ApiInternalServerErrorResponse,
+  ApiQuery,
+} from '@nestjs/swagger';
+import {
+  UserProfileResponse,
+  NotFoundResponse,
+  InternalServerErrorResponse,
+} from './users-respnse.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('users')
@@ -42,6 +53,14 @@ export class UsersController {
   }
 
   @Get('/profile')
+  @ApiOkResponse({
+    description: 'User profile retrieved successfully',
+    type: UserProfileResponse,
+  })
+  @ApiNotFoundResponse({
+    description: 'User not found',
+    type: NotFoundResponse,
+  })
   async getUserProfile(@GetUser() userPayload: JwtPayload) {
     const userId = userPayload.userId;
 
@@ -62,6 +81,18 @@ export class UsersController {
   }
 
   @Put('/profile')
+  @ApiOkResponse({
+    description: 'user updated successfully',
+    schema: {
+      example: {
+        message: 'user updated successfully',
+      },
+    },
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Failed to update user',
+    type: InternalServerErrorResponse,
+  })
   async updateUserProfile(
     @Body() updatedUser: UpdateUserDto,
     @GetUser() userPayload: JwtPayload,
@@ -103,13 +134,45 @@ export class UsersController {
   }
 
   @Get('/first-posts')
+  @ApiOkResponse({
+    description: 'first posts of each user sent successfully',
+    schema: {
+      example: {
+        message: 'first posts of each user sent successfully',
+      },
+    },
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    example: '1',
+    description: 'Page number',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    example: '5',
+    description: 'Posts per page',
+  })
+  @ApiQuery({
+    name: 'order',
+    required: false,
+    example: 'ASC',
+    description: 'Sort order (ASC or DESC)',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    example: 'john',
+    description: 'Filter posts by keyword',
+  })
   async getFirstPost(@Query() query: FirstPostsReqQuery) {
     const { page, limit, order, filter } = query;
 
     const res = await this.usersService.getPaginatedFirstPosts(
-      parseInt(page),
-      parseInt(limit),
-      order,
+      parseInt(page || '1'),
+      parseInt(limit || '5'),
+      order || 'ASC',
       filter,
     );
 

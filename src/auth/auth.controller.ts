@@ -10,7 +10,7 @@ import {
   ApiOkResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { ConflictResponse, UnauthorizedResponse } from './resonse.dto';
+import { ConflictResponse, UnauthorizedResponse } from './auth-resonse.dto';
 
 @Controller('auth')
 export class AuthController {

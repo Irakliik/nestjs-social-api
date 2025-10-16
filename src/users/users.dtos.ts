@@ -1,9 +1,16 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty } from 'class-validator';
 
 export class UpdateUserDto {
+  @ApiProperty({
+    example: 'Johnny',
+  })
   @IsNotEmpty()
   firstName: string;
   @IsNotEmpty()
+  @ApiProperty({
+    example: 'Doy',
+  })
   lastName: string;
 }
 
@@ -22,9 +29,12 @@ export interface UserPostWithLikes {
   numLikes: number;
 }
 
-export interface FirstPostsReqQuery {
-  page: string;
-  limit: string;
-  order: 'ASC' | 'DESC';
-  filter: string | undefined;
+export class FirstPostsReqQuery {
+  page?: string;
+
+  limit?: string;
+
+  order?: 'ASC' | 'DESC';
+
+  filter?: string;
 }
