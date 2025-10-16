@@ -37,13 +37,13 @@ export class PostsController {
   ) {
     // const userId = userPayload.userId;
 
-    const { page, limit, order } = query;
-    console.log(query);
+    const { page, limit, order, filter } = query;
 
     const posts = this.postsService.getFeed(
       parseInt(page),
       parseInt(limit),
       order,
+      filter,
     );
 
     this.logger.info('Sent posts successfully');

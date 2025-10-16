@@ -92,7 +92,7 @@ export class PostsService {
     page = 1,
     limit = 10,
     order: 'ASC' | 'DESC' = 'ASC',
-    filter = undefined,
+    filter?: string,
   ) {
     const pagRes = await this.getPaginatedPostsFeed(page, limit, order, filter);
 
@@ -239,6 +239,7 @@ export class PostsService {
       { author: { lastName: Like(keyword) } },
     ];
 
+    console.log(filter);
     const [posts, total] = await this.postsRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
