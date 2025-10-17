@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Like } from './likes.entity';
 import { Repository } from 'typeorm';
@@ -45,7 +49,7 @@ export class LikesService {
     });
 
     if (!existingLike) {
-      throw new ConflictException('No such like exists');
+      throw new NotFoundException('No such like exists');
     }
 
     const res = await this.likesRepository.delete(existingLike.id);

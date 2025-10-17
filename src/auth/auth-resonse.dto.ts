@@ -13,11 +13,11 @@ export class UnauthorizedResponse {
 
 export class ConflictResponse {
   @ApiProperty({ example: 409 })
-  statusCode: number = 409;
+  statusCode: number;
 
   @ApiProperty({ example: 'User with this email already exists' })
-  message: string = 'User with this email already exists';
+  message: string;
 
   @ApiProperty({ example: 'Conflict' })
-  error: string = 'Conflict';
+  error: string;
 }

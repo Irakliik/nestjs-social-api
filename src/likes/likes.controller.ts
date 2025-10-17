@@ -7,6 +7,16 @@ import { Logger } from 'winston';
 import * as winston from 'winston';
 import { winstonConfig } from 'logger/winston.config';
 import { LikesService } from './likes.service';
+import {
+  ApiConflictResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiParam,
+} from '@nestjs/swagger';
+import {
+  LikesConflictResponse,
+  LikesNotFoundResponse,
+} from './likes-response.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('users/posts/:postId/likes')
@@ -16,7 +26,24 @@ export class LikesController {
     this.logger = winston.createLogger(winstonConfig);
   }
 
+  @ApiOkResponse({
+    description: 'Like set successfully',
+    schema: {
+      example: {
+        message: 'Like set successfully',
+      },
+    },
+  })
   @Post()
+  @ApiConflictResponse({
+    description: 'You already liked this post',
+    type: LikesConflictResponse,
+  })
+  @ApiParam({
+    name: 'postId',
+    description: 'ID of the post',
+    example: '123abc',
+  })
   async setLike(
     @GetUser() userPayload: JwtPayload,
     @Param('postId') postId: string,
@@ -28,6 +55,23 @@ export class LikesController {
     return { message: 'Like set successfully' };
   }
 
+  @ApiParam({
+    name: 'postId',
+    description: 'ID of the post',
+    example: '123abc',
+  })
+  @ApiOkResponse({
+    description: 'Like removed successfully',
+    schema: {
+      example: {
+        message: 'Like removed successfully',
+      },
+    },
+  })
+  @ApiNotFoundResponse({
+    description: 'No such like exists',
+    type: LikesNotFoundResponse,
+  })
   @Delete()
   async removeLike(
     @GetUser() userPayload: JwtPayload,
